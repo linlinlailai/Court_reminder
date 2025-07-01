@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>搶場通知產生器</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    .time-buttons button, .player-buttons button {
+      margin: 4px;
+      padding: 6px 10px;
+    }
+    .time-buttons button.active {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .player-buttons button.assigned {
+      background-color: #2196F3;
+      color: white;
+    }
+    textarea {
+      width: 100%;
+      height: 220px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>搶場通知產生器</h2>
+
+<p>1️⃣ 點選一個時間 → 2️⃣ 再點選參加者（只能被分配到一個時段）</p>
+
+<div class="time-buttons" id="timeButtons">
+  <!-- 時間按鈕 -->
+</div>
+
+<h3>選擇參加者</h3>
+<div class="player-buttons" id="playerButtons">
+  <!-- 人員按鈕 -->
+</div>
+
+<br>
+<button onclick="generateMessage()">產生通知文字</button>
+<button onclick="copyToClipboard()">複製文字</button>
+<br>
+<textarea id="output" placeholder="這裡會出現通知文字..."></textarea>
+
+<script>
+  const times = ["18:00", "18:30", "19:00", "19:30", "20:00"];
+  let selectedTime = null;
+  const assignments = {}; // { "18:00": [人1,人2] }
+  const playerStatus = {}; // { "佳佑 Arvin": "18:30" }
+
+  const players = [
+    { id: "CK17583蔡佳佑483", label: "佳佑 Arvin" },
+    { id: "CK17671賴韋伶052", label: "韋伶 Lynn" },
+    { id: "CK17711楊家榮791", label: "家榮 Barry" },
+    { id: "CK17824陳毅庭705", label: "毅庭 Eden" },
+    { id: "CK17759陳冠勳033", label: "冠勳 Andersen" },
+    { id: "CK17778包國宏063", label: "國宏 Luke" },
+    { id: "CK17801劉庭宇161", label: "庭宇 Ben" },
+    { id: "CK17678廖顯德467", label: "顯德 Jerry" },
+    { id: "CK17792張嘉聞531", label: "嘉聞 ChiaWen" },
+    { id: "CK17718張富翔492", label: "富翔 Oscar" },
+    { id: "CK17795王冠翔436", label: "冠翔 Damien" },
+    { id: "CK17793方  煒218", label: "方煒 Tony" },
+    { id: "CK17812林杰凱808", label: "杰凱 Adam" },
+    { id: "CK17670吳政宇936", label: "政宇 Dennis" },
+    { id: "CK17509曾宇溢406", label: "宇溢 Eugene" },
+    { id: "CK17630詹鈞貿628", label: "鈞貿 CM" },
+    { id: "CK17556白承偉687", label: "小白 Chuck" },
+    { id: "CK17657林楊凱196", label: "楊凱 Zack" },
+    { id: "CK17815蔡佳宏079", label: "佳宏 Ian" },
+    { id: "CK17724謝德慶104", label: "德慶 Lantis" },
+    { id: "CF32054林宗翰314", label: "宗翰 Barry" }
+  ];
+
+  // 建立時間按鈕
+  const timeButtonsDiv = document.getElementById("timeButtons");
+  times.forEach(time => {
+    const btn = document.createElement("button");
+    btn.textContent = time;
+    btn.onclick = () => {
+      selectedTime = time;
+      document.querySelectorAll(".time-buttons button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    };
+    timeButtonsDiv.appendChild(btn);
+  });
+
+  // 建立人員按鈕
+  const playerButtonsDiv = document.getElementById("playerButtons");
+  players.forEach(player => {
+    const btn = document.createElement("button");
+    btn.textContent = player.label;
+    btn.onclick = () => {
+      if (!selectedTime) {
+        alert("請先選擇一個時段！");
+        return;
+      }
+
+      // 移除舊的分配
+      if (playerStatus[player.id]) {
+        const oldTime = playerStatus[player.id];
+        assignments[oldTime] = assignments[oldTime].filter(id => id !== player.id);
+      }
+
+      // 指派到新的時段
+      playerStatus[player.id] = selectedTime;
+      if (!assignments[selectedTime]) assignments[selectedTime] = [];
+      assignments[selectedTime].push(player.id);
+
+      updatePlayerButtons();
+    };
+    btn.id = "btn_" + player.id;
+    playerButtonsDiv.appendChild(btn);
+  });
+
+  function updatePlayerButtons() {
+    players.forEach(player => {
+      const btn = document.getElementById("btn_" + player.id);
+      if (playerStatus[player.id]) {
+        btn.classList.add("assigned");
+        btn.textContent = players.find(p => p.id === player.id).label + ` ✅ (${playerStatus[player.id]})`;
+      } else {
+        btn.classList.remove("assigned");
+        btn.textContent = players.find(p => p.id === player.id).label;
+      }
+    });
+  }
+
+  function generateMessage() {
+    let message = "麻煩14:00幫忙一起搶場地\n03-560-1068\n場地預約順序ABCD\n";
+
+    const sortedTimes = Object.keys(assignments).sort();
+    sortedTimes.forEach(time => {
+      if (assignments[time].length > 0) {
+        message += time + "\n";
+        assignments[time].forEach(playerId => {
+          message += playerId + "\n";
+        });
+      }
+    });
+
+    document.getElementById("output").value = message.trim();
+  }
+
+  function copyToClipboard() {
+    const output = document.getElementById("output");
+    output.select();
+    document.execCommand("copy");
+    alert("已複製到剪貼簿！");
+  }
+</script>
+
+</body>
+</html>
