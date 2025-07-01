@@ -64,6 +64,7 @@
 <br>
 <button onclick="copyToClipboard()">📋 複製文字</button>
 <button onclick="clearAll()">🧹 清空全部</button>
+<button onclick="shareToLine()">💬 分享到 LINE</button>
 
 <br>
 <textarea id="output" placeholder="這裡會即時顯示通知內容..."></textarea>
@@ -182,6 +183,16 @@
     document.querySelectorAll(".time-buttons button").forEach(b => b.classList.remove("active"));
     document.getElementById("output").value = "";
   }
+  
+  function shareToLine() {
+  const message = document.getElementById("output").value;
+  if (!message) {
+    alert("目前沒有產生的訊息可以分享！");
+    return;
+  }
+  const url = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
+  window.open(url);
+}
 </script>
 
 </body>
