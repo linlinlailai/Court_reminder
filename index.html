@@ -118,25 +118,38 @@
     const btn = document.createElement("button");
     btn.textContent = player.label;
     btn.onclick = () => {
-      if (!selectedTime) {
-        alert("請先選擇一個時段！");
-        return;
-      }
+  if (!selectedTime) {
+    alert("請先選擇一個時段！");
+    return;
+  }
 
-      // 取消原本分配
-      if (playerStatus[player.id]) {
-        const oldTime = playerStatus[player.id];
-        assignments[oldTime] = assignments[oldTime].filter(id => id !== player.id);
-      }
+  // 如果已經選過，且是同一個時段 → 取消分配
+  if (playerStatus[player.id] === selectedTime) {
+    assignments[selectedTime] = assignments[selectedTime].filter(id => id !== player.id);
+    delete playerStatus[player.id];
+  } else {
+    // 移除舊時段
+    if (playerStatus[player.id]) {
+      const oldTime = playerStatus[player.id];
+      assignments[oldTime] = assignments[oldTime].filter(id => id !== player.id);
+    }
 
-      // 新增到目前時段
-      playerStatus[player.id] = selectedTime;
-      if (!assignments[selectedTime]) assignments[selectedTime] = [];
-      assignments[selectedTime].push(player.id);
+    // 加入新時段
+    playerStatus[player.id] = selectedTime;
+    if (!assignments[selectedTime]) assignments[selectedTime] = [];
+    assignments[selectedTime].push(player.id);
+  }
 
-      updatePlayerButtons();
-      updateOutput(); // ✅ 即時更新文字
-    };
+  updatePlayerButtons();
+  updateOutput();
+};
+    
+    
+    
+    
+    
+    
+    
     btn.id = "btn_" + player.id;
     playerButtonsDiv.appendChild(btn);
   });
