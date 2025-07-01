@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>搶場通知產生器</title>
+</head>
+<body>
+  <h2>請選擇打球時間與成員</h2>
+
+  <label for="time">時間：</label>
+  <select id="time">
+    <option value="18:00">18:00</option>
+    <option value="18:30">18:30</option>
+    <option value="19:00">19:00</option>
+    <option value="19:30">19:30</option>
+    <option value="20:00">20:00</option>
+  </select>
+
+  <h3>今天誰要打？</h3>
+  <label><input type="checkbox" value="小美（會員 0988-xxxx）"> 小美</label><br>
+  <label><input type="checkbox" value="阿翔（訪客）"> 阿翔</label><br>
+  <label><input type="checkbox" value="豪哥（會員 0911-xxxx）"> 豪哥</label><br>
+CK17583蔡佳佑483
+CK17671賴韋伶052
+CK17711楊家榮791
+CK17824陳毅庭705
+CK17759陳冠勳033
+CK17778包國宏063
+CK17801劉庭宇161
+CK17678廖顯德467
+CK17792張嘉聞531
+CK17718張富翔492
+CK17795王冠翔436
+CK17793方    煒218
+CK17812林杰凱808
+CK17670吳政宇936
+CK17509曾宇溢406
+CK17630詹鈞貿628
+CK17556白承偉687
+CK17657林楊凱196
+CK17815蔡佳宏079
+CK17724謝德慶104
+CF32054林宗翰314
+
+
+  
+  <br>
+  <button onclick="generateMessage()">產生通知文字</button>
+  <br><br>
+  <textarea id="output" rows="6" cols="40"></textarea>
+
+  <script>
+    function generateMessage() {
+      const time = document.getElementById("time").value;
+      const checkboxes = document.querySelectorAll("input[type=checkbox]:checked");
+      let output = `今天 ${time} 搶場：\n`;
+      checkboxes.forEach((cb, i) => {
+        output += `${i + 1}. ${cb.value}\n`;
+      });
+      document.getElementById("output").value = output;
+    }
+  </script>
+</body>
+</html>
