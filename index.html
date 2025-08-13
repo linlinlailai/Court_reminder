@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏸 搶場通知產生器</title>
+    <title>🏸 羽球小工具</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -380,6 +380,120 @@
             background: #c82333;
             transform: translateY(-2px);
         }
+
+        /* 戰術板樣式 */
+        .tactical-board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .court-container {
+            position: relative;
+            width: 90%;
+            max-width: 400px;
+            background: #4CAF50;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            aspect-ratio: 1 / 2.2;
+        }
+
+        .court-svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .court-line {
+            stroke: white;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .court-net {
+            stroke: white;
+            stroke-width: 3;
+            stroke-dasharray: 8,4;
+            fill: none;
+        }
+
+        .player-dot {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: move;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .player-dot:hover {
+            transform: scale(1.1);
+        }
+
+        .player-dot.dragging {
+            opacity: 0.7;
+            transform: scale(1.2);
+            z-index: 20;
+        }
+
+        .player-dot.player1 {
+            background: #FF5722;
+        }
+
+        .player-dot.player2 {
+            background: #2196F3;
+        }
+
+        .player-dot.player3 {
+            background: #FF9800;
+        }
+
+        .player-dot.player4 {
+            background: #9C27B0;
+        }
+
+        .tactical-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .reset-btn {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .reset-btn:hover {
+            background: #F57C00;
+            transform: translateY(-2px);
+        }
+
+        .tactical-info {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
         
         @media (max-width: 768px) {
             .container {
@@ -399,16 +513,36 @@
             .dashboard-stats {
                 grid-template-columns: 1fr;
             }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                margin-right: 0;
+                margin-bottom: 5px;
+            }
+
+            .court-container {
+                width: 95%;
+                max-width: 350px;
+            }
+
+            .player-dot {
+                width: 45px;
+                height: 45px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏸 搶場通知產生器</h1>
+        <h1>🏸 羽球小工具</h1>
         
         <div class="tabs">
             <button class="tab active" onclick="showTab('generator')">通知產生器</button>
             <button class="tab" onclick="showTab('dashboard')">打球頻率儀表板</button>
+            <button class="tab" onclick="showTab('tactical')">戰術板</button>
         </div>
         
         <div id="generator" class="tab-content active">
@@ -482,6 +616,55 @@
             
             <button class="clear-data-btn" onclick="clearAllData()">🗑️ 清除所有統計資料</button>
         </div>
+
+        <div id="tactical" class="tab-content">
+            <div class="tactical-board">
+                <div class="tactical-info">
+                    <h2>🏸 羽球戰術板</h2>
+                    <p>拖拽圓點來討論戰術 • 四個圓點代表四名球員</p>
+                </div>
+                
+                <div class="court-container" id="courtContainer">
+                    <svg class="court-svg" viewBox="0 0 200 440" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 外圍邊界線 (雙打) -->
+                        <rect x="10" y="10" width="180" height="420" class="court-line"/>
+                        
+                        <!-- 單打邊界線 (左右兩側) -->
+                        <line x1="25" y1="10" x2="25" y2="430" class="court-line"/>
+                        <line x1="175" y1="10" x2="175" y2="430" class="court-line"/>
+                        
+                        <!-- 上半場發球線 -->
+                        <line x1="10" y1="260" x2="190" y2="260" class="court-line"/>
+                        
+                        <!-- 下半場發球線 -->
+                        <line x1="10" y1="180" x2="190" y2="180" class="court-line"/>
+
+                         <!-- 上半場底線 -->
+                        <line x1="10" y1="410" x2="190" y2="410" class="court-line"/>
+                        
+                        <!-- 下半場底線 -->
+                        <line x1="10" y1="30" x2="190" y2="30" class="court-line"/>
+                        
+                        <!-- 中線 (分隔左右發球區) -->
+                        <line x1="100" y1="260" x2="100" y2="430" class="court-line"/>
+                        <line x1="100" y1="10" x2="100" y2="180" class="court-line"/>
+                        
+                        <!-- 網子 (虛線) -->
+                        <line x1="10" y1="220" x2="190" y2="220" class="court-net"/>
+                    </svg>
+                    
+                    <!-- 球員圓點 -->
+                    <div class="player-dot player1" id="player1" data-player="1">1</div>
+                    <div class="player-dot player2" id="player2" data-player="2">2</div>
+                    <div class="player-dot player3" id="player3" data-player="3">3</div>
+                    <div class="player-dot player4" id="player4" data-player="4">4</div>
+                </div>
+                
+                <div class="tactical-controls">
+                    <button class="reset-btn" onclick="resetPlayerPositions()">🔄 重置位置</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -526,11 +709,24 @@
         { id: "CF32054林宗翰314", label: "宗翰" }
     ];
 
+    // 戰術板相關變數
+    let isDragging = false;
+    let currentDragElement = null;
+    let dragOffset = { x: 0, y: 0 };
+
+    // 初始球員位置 (百分比)
+    const initialPositions = {
+        player1: { x: 30, y: 75 },  // 下半場左側
+        player2: { x: 70, y: 75 },  // 下半場右側
+        player3: { x: 30, y: 25 },  // 上半場左側
+        player4: { x: 70, y: 25 }   // 上半場右側
+    };
+
     // 初始化 Firebase
-    async function initFirebase( ) {
+    async function initFirebase() {
         try {
-            const firebaseApp = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js' );
-            const firebaseDatabase = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js' );
+            const firebaseApp = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
+            const firebaseDatabase = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js');
             
             const app = firebaseApp.initializeApp(firebaseConfig);
             database = firebaseDatabase.getDatabase(app);
@@ -669,7 +865,7 @@
             return;
         }
         
-        const url = `https://line.me/R/msg/text/?${encodeURIComponent(message )}`;
+        const url = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
         window.open(url);
         await recordCourtData();
     }
@@ -694,14 +890,12 @@
         setTimeout(() => { messageDiv.style.display = "none"; }, 3000);
     }
 
-    // *** 核心修改：更新統計數據的通用函式 ***
+    // 更新統計數據的通用函式
     function updateStatistics(stats, oldParticipants, newParticipants) {
         const oldSet = new Set(oldParticipants);
         const newSet = new Set(newParticipants);
 
-        // 新增的成員: 在新名單但不在舊名單
         const added = newParticipants.filter(p => !oldSet.has(p));
-        // 移除的成員: 在舊名單但不在新名單
         const removed = oldParticipants.filter(p => !newSet.has(p));
 
         added.forEach(participantId => {
@@ -719,14 +913,14 @@
             if (stats[key] && stats[key].count > 0) {
                 stats[key].count -= 1;
                 if (stats[key].count <= 0) {
-                    delete stats[key]; // 如果次數歸零，則移除該成員
+                    delete stats[key];
                 }
             }
         });
         return stats;
     }
 
-    // *** 核心修改：記錄打球數據 (Firebase) ***
+    // 記錄打球數據 (Firebase)
     async function recordCourtData() {
         const today = new Date().toISOString().split('T')[0];
         const newParticipants = Object.values(assignments).flat();
@@ -741,7 +935,7 @@
 
         if (isFirebaseConnected) {
             try {
-                const { ref, set, get } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js' );
+                const { ref, set, get } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js');
                 
                 const courtRef = ref(database, `court_reminders/${today}`);
                 const statsRef = ref(database, 'statistics');
@@ -760,14 +954,14 @@
                 loadDashboardData();
             } catch (error) {
                 console.error('Firebase 寫入失敗:', error);
-                recordLocalData(data); // 雲端失敗時，轉為本地記錄
+                recordLocalData(data);
             }
         } else {
             recordLocalData(data);
         }
     }
 
-    // *** 核心修改：記錄本地數據 ***
+    // 記錄本地數據
     function recordLocalData(data) {
         try {
             const today = data.date;
@@ -795,7 +989,7 @@
     async function loadDashboardData() {
         if (isFirebaseConnected) {
             try {
-                const { ref, get } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js' );
+                const { ref, get } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js');
                 const statsRef = ref(database, 'statistics');
                 const courtRef = ref(database, 'court_reminders');
                 const [statsSnapshot, courtSnapshot] = await Promise.all([get(statsRef), get(courtRef)]);
@@ -834,7 +1028,7 @@
         document.getElementById('lastUpdate').textContent = lastUpdate;
         
         const sortedStats = Object.entries(stats)
-            .filter(([,data]) => data.count > 0) // 只顯示次數大於0的
+            .filter(([,data]) => data.count > 0)
             .sort(([,a], [,b]) => (b.count || 0) - (a.count || 0));
         
         const leaderboard = document.getElementById('leaderboard');
@@ -874,7 +1068,7 @@
         if (confirm('確定要清除所有統計資料嗎？此操作無法復原。')) {
             if (isFirebaseConnected) {
                 try {
-                    const { ref, remove } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js' );
+                    const { ref, remove } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js');
                     await remove(ref(database, 'statistics'));
                     await remove(ref(database, 'court_reminders'));
                     loadDashboardData();
@@ -892,14 +1086,105 @@
         }
     }
 
+    // 戰術板功能
+    function initTacticalBoard() {
+        const courtContainer = document.getElementById('courtContainer');
+        const playerDots = document.querySelectorAll('.player-dot');
+
+        // 設置初始位置
+        resetPlayerPositions();
+
+        // 為每個圓點添加事件監聽器
+        playerDots.forEach(dot => {
+            // 滑鼠事件
+            dot.addEventListener('mousedown', startDrag);
+            
+            // 觸控事件
+            dot.addEventListener('touchstart', startDrag, { passive: false });
+        });
+
+        // 全域事件監聽器
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchmove', drag, { passive: false });
+        document.addEventListener('touchend', endDrag);
+    }
+
+    function startDrag(e) {
+        e.preventDefault();
+        isDragging = true;
+        currentDragElement = e.target;
+        currentDragElement.classList.add('dragging');
+
+        const rect = document.getElementById('courtContainer').getBoundingClientRect();
+        const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+        dragOffset.x = clientX - rect.left - (currentDragElement.offsetLeft + currentDragElement.offsetWidth / 2);
+        dragOffset.y = clientY - rect.top - (currentDragElement.offsetTop + currentDragElement.offsetHeight / 2);
+    }
+
+    function drag(e) {
+        if (!isDragging || !currentDragElement) return;
+        e.preventDefault();
+
+        const rect = document.getElementById('courtContainer').getBoundingClientRect();
+        const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+        let x = clientX - rect.left - dragOffset.x - currentDragElement.offsetWidth / 2;
+        let y = clientY - rect.top - dragOffset.y - currentDragElement.offsetHeight / 2;
+
+        // 邊界檢測
+        const maxX = rect.width - currentDragElement.offsetWidth;
+        const maxY = rect.height - currentDragElement.offsetHeight;
+
+        x = Math.max(0, Math.min(x, maxX));
+        y = Math.max(0, Math.min(y, maxY));
+
+        currentDragElement.style.left = x + 'px';
+        currentDragElement.style.top = y + 'px';
+    }
+
+    function endDrag() {
+        if (currentDragElement) {
+            currentDragElement.classList.remove('dragging');
+        }
+        isDragging = false;
+        currentDragElement = null;
+    }
+
+    function resetPlayerPositions() {
+        const courtContainer = document.getElementById('courtContainer');
+        const rect = courtContainer.getBoundingClientRect();
+
+        Object.keys(initialPositions).forEach(playerId => {
+            const dot = document.getElementById(playerId);
+            const pos = initialPositions[playerId];
+            
+            // 計算實際位置（考慮圓點大小）
+            const x = (pos.x / 100) * rect.width - dot.offsetWidth / 2;
+            const y = (pos.y / 100) * rect.height - dot.offsetHeight / 2;
+            
+            dot.style.left = Math.max(0, Math.min(x, rect.width - dot.offsetWidth)) + 'px';
+            dot.style.top = Math.max(0, Math.min(y, rect.height - dot.offsetHeight)) + 'px';
+        });
+    }
+
     // 分頁切換
     function showTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
         document.getElementById(tabName).classList.add('active');
         event.currentTarget.classList.add('active');
+        
         if (tabName === 'dashboard') {
             loadDashboardData();
+        } else if (tabName === 'tactical') {
+            // 延遲初始化戰術板，確保DOM已渲染
+            setTimeout(() => {
+                resetPlayerPositions();
+            }, 100);
         }
     }
 
@@ -908,9 +1193,18 @@
         createTimeButtons();
         createPlayerButtons();
         initFirebase();
+        initTacticalBoard();
     });
-</script>
+
+    // 視窗大小改變時重新調整圓點位置
+    window.addEventListener('resize', () => {
+        if (document.getElementById('tactical').classList.contains('active')) {
+            setTimeout(() => {
+                resetPlayerPositions();
+            }, 100);
+        }
+    });
+    </script>
 
 </body>
 </html>
-
