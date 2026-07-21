@@ -23,21 +23,28 @@ The Worker is deployed separately via the Cloudflare dashboard (copy-paste into 
 
 ## Frontend Structure (index.html)
 
-Six tabs, each initialized with a dedicated `init*Tab()` function:
+Six tabs (previously seven — 🛒 買球記帳 was merged into 💰 分帳計算):
 
 | Tab | Function | Description |
 |-----|----------|-------------|
-| 📋 Notification | `initNotificationTab()` | Generate LINE messages for court bookings |
-| 🔍 Membership | `initMembershipTab()` | Look up gym membership expiry via CAPTCHA login |
-| 🏸 Tactical Board | `initTacticalBoard()` | Drag-drop player positions on court diagram |
-| 🏆 Scoreboard | `initScoreboard()` | In-game point tracking |
-| 🛒 Ball Tracker | `initBallPurchase()` | Log ball purchases, shared expense tracking |
-| 💰 Split Calc | `initSplitCalcTab()` | Tier-based annual cost splitting with drag-drop |
+| 📋 通知產生器 | `initNotificationTab()` | Generate LINE messages for court bookings |
+| 🔍 會員快速查詢 | `initMembershipTab()` | Look up gym membership expiry via CAPTCHA login |
+| 🏸 戰術板 | `initTacticalBoard()` | Drag-drop player positions on court diagram |
+| 🏆 計分板 | `initScoreboard()` | In-game point tracking |
+| 💰 分帳計算 | `initSplitCalcTab()` / `initBallInventory()` | Two sub-tabs (see below) |
+| 📒 公帳紀錄 | `initPublicAccountTab()` | Club fund ledger: income/expense records + running balance |
+
+### 💰 分帳計算 Sub-tabs
+
+| Sub-tab | Content |
+|---------|---------|
+| **2026/03 舊分帳模式** | 🛒 買球記帳 (purchase records) + 球員頻率分級 (drag-drop tiers) + 🧮 分帳計算機 (tier-based cost splitting) |
+| **新分帳模式 📦球的分配與庫存** (default) | 📦 進貨與分配 (purchase + player distribution with buyer) + 🏠 庫存狀態 (per-player progress bars) + 📈 用球趨勢 (Chart.js line chart) |
 
 **Key constants at top of `<script>`:**
 ```js
 const WORKER_URL = 'https://gym-query.linlinlailai.workers.dev';
-const players = [...]; // 28 players with bilingual names
+const players = [...]; // 29 players with bilingual names
 ```
 
 ## Backend API (worker.js)
@@ -51,8 +58,18 @@ const players = [...]; // 28 players with bilingual names
 | DELETE | `/ball-purchases/:id` | Delete a purchase record |
 | GET | `/frequency-tiers` | Fetch tier assignments (S/A/B/C/unassigned) |
 | POST | `/frequency-tiers` | Save tier assignments |
+| GET | `/payment-status` | Fetch split-calc payment status per player |
+| POST | `/payment-status` | Save split-calc payment status |
+| GET | `/ball-inventory` | Fetch all purchase + inventory log data |
+| POST | `/ball-inventory/purchase` | Add a purchase with player distributions |
+| DELETE | `/ball-inventory/purchase/:id` | Delete a purchase record |
+| POST | `/ball-inventory/update-stock` | Update a player's remaining tube count |
 
-**KV keys:** `ball_purchases` (array of purchase objects), `frequency_tiers` (object with S/A/B/C/unassigned arrays).
+**KV keys:**
+- `ball_purchases` — array of purchase objects
+- `frequency_tiers` — object with S/A/B/C/unassigned arrays
+- `payment_status` — object mapping player name → paid boolean
+- `ball_inventory` — `{ purchases: [...], inventoryLogs: [...] }` for ball distribution & stock tracking
 
 ## Frequency Tier Logic
 

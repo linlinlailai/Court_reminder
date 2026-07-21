@@ -12,7 +12,7 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 function corsHeaders(origin) {
     return {
         'Access-Control-Allow-Origin': origin || '*',
-        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
     };
 }
@@ -71,6 +71,19 @@ export default {
             if (url.pathname === '/payment-status' && request.method === 'GET') return await getPaymentStatus(env, origin);
             if (url.pathname === '/payment-status' && request.method === 'POST') return await savePaymentStatus(env, await request.json(), origin);
 
+            // === 球的分配與庫存 API ===
+            if (url.pathname === '/ball-inventory' && request.method === 'GET') return await getBallInventory(env, origin);
+            if (url.pathname === '/ball-inventory/purchase' && request.method === 'POST') return await addBallInventoryPurchase(env, await request.json(), origin);
+            if (url.pathname.startsWith('/ball-inventory/purchase/') && request.method === 'PUT') {
+                const id = url.pathname.replace('/ball-inventory/purchase/', '');
+                return await updateBallInventoryPurchase(env, id, await request.json(), origin);
+            }
+            if (url.pathname.startsWith('/ball-inventory/purchase/') && request.method === 'DELETE') {
+                const id = url.pathname.replace('/ball-inventory/purchase/', '');
+                return await deleteBallInventoryPurchase(env, id, origin);
+            }
+            if (url.pathname === '/ball-inventory/update-stock' && request.method === 'POST') return await updateBallStock(env, await request.json(), origin);
+
             // === 公帳紀錄 API ===
             if (url.pathname === '/public-account' && request.method === 'GET') return await getPublicAccount(env, origin);
             if (url.pathname === '/public-account' && request.method === 'POST') return await addPublicAccountRecord(env, await request.json(), origin);
@@ -79,7 +92,7 @@ export default {
                 return await deletePublicAccountRecord(env, id, origin);
             }
 
-            return jsonResp({ message: 'API ready', endpoints: ['GET /captcha', 'POST /login', 'GET /test', 'GET /ball-purchases', 'POST /ball-purchases', 'DELETE /ball-purchases/:id', 'GET /frequency-tiers', 'POST /frequency-tiers', 'GET /payment-status', 'POST /payment-status', 'GET /public-account', 'POST /public-account', 'DELETE /public-account/:id'] }, origin);
+            return jsonResp({ message: 'API ready', endpoints: ['GET /captcha', 'POST /login', 'GET /test', 'GET /ball-purchases', 'POST /ball-purchases', 'DELETE /ball-purchases/:id', 'GET /frequency-tiers', 'POST /frequency-tiers', 'GET /payment-status', 'POST /payment-status', 'GET /ball-inventory', 'POST /ball-inventory/purchase', 'PUT /ball-inventory/purchase/:id', 'DELETE /ball-inventory/purchase/:id', 'POST /ball-inventory/update-stock', 'GET /public-account', 'POST /public-account', 'DELETE /public-account/:id'] }, origin);
         } catch (error) {
             return jsonResp({ success: false, error: error.message, stack: error.stack }, origin, 500);
         }
@@ -400,5 +413,135 @@ async function deletePublicAccountRecord(env, id, origin) {
     const records = raw ? JSON.parse(raw) : [];
     const filtered = records.filter(r => r.id !== id);
     await env.BALL_KV.put(PUBLIC_ACCOUNT_KV_KEY, JSON.stringify(filtered));
+    return jsonResp({ success: true }, origin);
+}
+
+// === 球的分配與庫存 API 處理函數 ===
+const BALL_INVENTORY_KV_KEY = 'ball_inventory';
+
+async function loadInventoryData(env) {
+    const raw = await env.BALL_KV.get(BALL_INVENTORY_KV_KEY);
+    return raw ? JSON.parse(raw) : { purchases: [], inventoryLogs: [] };
+}
+
+async function saveInventoryData(env, data) {
+    await env.BALL_KV.put(BALL_INVENTORY_KV_KEY, JSON.stringify(data));
+}
+
+async function getBallInventory(env, origin) {
+    const data = await loadInventoryData(env);
+    return jsonResp({ success: true, ...data }, origin);
+}
+
+async function addBallInventoryPurchase(env, body, origin) {
+    const { date, totalTubes, totalCost, buyer, note, distributions } = body;
+    if (!totalTubes || !distributions || typeof distributions !== 'object') {
+        return jsonResp({ success: false, error: '缺少必要欄位（totalTubes, distributions）' }, origin, 400);
+    }
+    const data = await loadInventoryData(env);
+    const purchase = {
+        id: 'p_' + Date.now(),
+        date: date || new Date().toISOString().slice(0, 10),
+        totalTubes: Number(totalTubes),
+        totalCost: Number(totalCost) || 0,
+        buyer: buyer || '',
+        note: note || '',
+        distributions,
+        createdAt: new Date().toISOString(),
+    };
+    data.purchases.unshift(purchase);
+
+    // 每位分配到球的人，自動新增一筆庫存紀錄（初始值 = 分配數）
+    for (const [player, qty] of Object.entries(distributions)) {
+        if (Number(qty) > 0) {
+            // 計算該球員在此筆之前已持有的數量
+            const prevRemaining = getPlayerRemaining(data, player, purchase.id);
+            data.inventoryLogs.push({
+                player,
+                remaining: prevRemaining + Number(qty),
+                date: new Date().toISOString(),
+                source: 'purchase',
+                purchaseId: purchase.id,
+            });
+        }
+    }
+
+    await saveInventoryData(env, data);
+    return jsonResp({ success: true, purchase }, origin);
+}
+
+// 計算某球員的最新剩餘數（排除指定 purchaseId）
+function getPlayerRemaining(data, player, excludePurchaseId) {
+    const logs = data.inventoryLogs
+        .filter(l => l.player === player && l.purchaseId !== excludePurchaseId)
+        .sort((a, b) => b.date.localeCompare(a.date));
+    return logs.length > 0 ? logs[0].remaining : 0;
+}
+
+async function updateBallInventoryPurchase(env, id, body, origin) {
+    if (!id) return jsonResp({ success: false, error: '缺少 id' }, origin, 400);
+    const data = await loadInventoryData(env);
+    const idx = data.purchases.findIndex(p => p.id === id);
+    if (idx < 0) return jsonResp({ success: false, error: '找不到該筆紀錄' }, origin, 404);
+
+    const old = data.purchases[idx];
+    const { date, totalTubes, totalCost, buyer, note, distributions } = body;
+
+    // 更新欄位
+    if (date !== undefined) old.date = date;
+    if (totalTubes !== undefined) old.totalTubes = Number(totalTubes);
+    if (totalCost !== undefined) old.totalCost = Number(totalCost);
+    if (buyer !== undefined) old.buyer = buyer;
+    if (note !== undefined) old.note = note;
+
+    // 如果分配有變，刪除舊的 purchase 庫存紀錄，重建新的
+    if (distributions) {
+        old.distributions = distributions;
+        data.inventoryLogs = data.inventoryLogs.filter(l => l.purchaseId !== id);
+        for (const [player, qty] of Object.entries(distributions)) {
+            if (Number(qty) > 0) {
+                const prevRemaining = getPlayerRemaining(data, player, id);
+                data.inventoryLogs.push({
+                    player,
+                    remaining: prevRemaining + Number(qty),
+                    date: new Date().toISOString(),
+                    source: 'purchase',
+                    purchaseId: id,
+                });
+            }
+        }
+    }
+
+    data.purchases[idx] = old;
+    await saveInventoryData(env, data);
+    return jsonResp({ success: true, purchase: old }, origin);
+}
+
+async function deleteBallInventoryPurchase(env, id, origin) {
+    if (!id) return jsonResp({ success: false, error: '缺少 id' }, origin, 400);
+    const data = await loadInventoryData(env);
+    data.purchases = data.purchases.filter(p => p.id !== id);
+    // 刪除該筆進貨產生的庫存紀錄
+    data.inventoryLogs = data.inventoryLogs.filter(l => l.purchaseId !== id);
+    await saveInventoryData(env, data);
+    return jsonResp({ success: true }, origin);
+}
+
+async function updateBallStock(env, body, origin) {
+    const { player, remaining } = body;
+    if (!player || remaining === undefined || remaining === null) {
+        return jsonResp({ success: false, error: '缺少必要欄位（player, remaining）' }, origin, 400);
+    }
+    if (Number(remaining) < 0) {
+        return jsonResp({ success: false, error: '剩餘數不能為負數' }, origin, 400);
+    }
+    const data = await loadInventoryData(env);
+    data.inventoryLogs.push({
+        player,
+        remaining: Number(remaining),
+        date: new Date().toISOString(),
+        source: 'manual',
+    });
+    await saveInventoryData(env, data);
     return jsonResp({ success: true }, origin);
 }

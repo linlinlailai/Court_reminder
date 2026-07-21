@@ -1432,7 +1432,234 @@
             font-size: 13px; color: #888; text-align: right;
         }
         .split-total-check b { color: #333; }
+        /* ========= 子分頁切換 ========= */
+        .sub-tab-bar {
+            display: flex; gap: 0; margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .sub-tab-btn {
+            padding: 10px 20px;
+            border: none; background: none;
+            font-size: 14px; font-weight: bold; color: #888;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .sub-tab-btn:hover { color: #667eea; }
+        .sub-tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        .sub-tab-content { display: none; }
+        .sub-tab-content.active { display: block; }
+
+        /* ========= 球的分配與庫存 ========= */
+        .bi-section {
+            background: #f8f9fa; border-radius: 14px;
+            padding: 20px 22px; border: 1px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+        .bi-section h3 { margin: 0 0 16px; color: #333; font-size: 16px; }
+
+        /* 進貨表單 */
+        .bi-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px; margin-bottom: 14px;
+        }
+        .bi-form-field label {
+            display: block; font-size: 12px; font-weight: bold;
+            color: #666; margin-bottom: 4px;
+        }
+        .bi-form-field input,
+        .bi-form-field select {
+            width: 100%; padding: 8px 10px; border: 2px solid #ddd;
+            border-radius: 8px; font-size: 14px; box-sizing: border-box;
+            background: white; color: #333;
+            appearance: none; -webkit-appearance: none;
+        }
+        .bi-form-field select {
+            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 10px center;
+            padding-right: 30px; cursor: pointer;
+        }
+        .bi-form-field input:focus,
+        .bi-form-field select:focus { border-color: #667eea; outline: none; }
+
+        /* 球員分配器 */
+        .bi-dist-wrap {
+            background: white; border-radius: 10px; padding: 14px;
+            border: 1px solid #e0e0e0; margin-bottom: 14px;
+        }
+        .bi-dist-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; flex-wrap: wrap; gap: 6px;
+        }
+        .bi-dist-header span { font-size: 13px; font-weight: bold; color: #555; }
+        .bi-dist-remaining { font-size: 13px; color: #667eea; font-weight: bold; }
+        .bi-dist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+        }
+        .bi-dist-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px; border-radius: 10px;
+            background: white; border: 2px solid #e9ecef;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .bi-dist-item.checked {
+            border-color: #667eea; background: #f0f2ff;
+        }
+        .bi-dist-item input[type="checkbox"] {
+            width: 18px; height: 18px;
+            accent-color: #667eea; cursor: pointer; flex-shrink: 0;
+        }
+        .bi-dist-item label {
+            font-size: 13px; font-weight: 600; flex: 1;
+            cursor: pointer; color: #444;
+        }
+        .bi-dist-item input[type="number"] {
+            width: 58px; padding: 6px 8px; border: 2px solid #ddd;
+            border-radius: 8px; font-size: 14px; text-align: center;
+            font-weight: bold; color: #667eea;
+        }
+        .bi-dist-item input[type="number"]:focus {
+            border-color: #667eea; outline: none;
+        }
+        .bi-add-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 10px 24px;
+            border-radius: 10px; cursor: pointer; font-size: 14px;
+            font-weight: bold; transition: all 0.2s;
+        }
+        .bi-add-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(102,126,234,0.4); }
+        .bi-add-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* 進貨歷史 */
+        .bi-purchase-card {
+            background: white; border-radius: 10px; padding: 14px 16px;
+            border: 1px solid #e0e0e0; margin-bottom: 10px;
+        }
+        .bi-purchase-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 6px; flex-wrap: wrap; gap: 6px;
+        }
+        .bi-purchase-date { font-weight: bold; color: #333; flex: 1; }
+        .bi-purchase-header-actions {
+            display: flex; gap: 2px; flex-shrink: 0;
+        }
+        .bi-purchase-header-actions button {
+            background: none; border: none; cursor: pointer;
+            font-size: 16px; opacity: 0.4; transition: opacity 0.2s;
+            padding: 2px 5px;
+        }
+        .bi-purchase-header-actions button:hover { opacity: 1; }
+        .bi-purchase-stats { font-size: 13px; color: #666; margin-bottom: 8px; }
+        .bi-purchase-stats b { color: #667eea; }
+        .bi-purchase-dist {
+            display: flex; flex-wrap: wrap; gap: 6px;
+        }
+        .bi-purchase-chip {
+            font-size: 12px; padding: 3px 10px; border-radius: 12px;
+            background: #eef0ff; color: #667eea; font-weight: bold;
+        }
+        /* (purchase actions moved inline into header) */
+        /* 編輯表單 */
+        .bi-edit-form { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ddd; }
+        .bi-edit-form .bi-form-grid { margin-bottom: 10px; }
+        .bi-edit-dist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px; margin-bottom: 12px;
+        }
+        .bi-edit-actions { display: flex; gap: 10px; }
+        .bi-edit-actions button {
+            padding: 8px 20px; border-radius: 8px; font-size: 13px;
+            font-weight: bold; cursor: pointer; border: none;
+        }
+        .bi-edit-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .bi-edit-cancel { background: #f0f0f0; color: #666; }
+
+        /* 庫存進度條 */
+        .bi-stock-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: 10px;
+            background: white; border: 1px solid #e9ecef;
+            margin-bottom: 8px; cursor: pointer;
+            transition: box-shadow 0.2s;
+        }
+        .bi-stock-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .bi-stock-name {
+            min-width: 90px; font-size: 13px; font-weight: bold; color: #333;
+        }
+        .bi-stock-bar-wrap {
+            flex: 1; height: 22px; background: #eee;
+            border-radius: 11px; overflow: hidden; position: relative;
+        }
+        .bi-stock-bar {
+            height: 100%; border-radius: 11px;
+            transition: width 0.4s ease;
+        }
+        .bi-stock-bar.green { background: linear-gradient(90deg, #667eea, #8fa4f0); }
+        .bi-stock-bar.yellow { background: linear-gradient(90deg, #b0a080, #c8b898); }
+        .bi-stock-bar.red { background: linear-gradient(90deg, #c47a7a, #d9a0a0); }
+        .bi-stock-label {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: bold; color: #333;
+            text-shadow: 0 0 3px rgba(255,255,255,0.8);
+        }
+        .bi-stock-info {
+            font-size: 12px; color: #888; min-width: 80px; text-align: right;
+            white-space: nowrap;
+        }
+        .bi-stock-warn { color: #e53935; font-weight: bold; }
+
+        /* 庫存更新對話框 */
+        .bi-update-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .bi-update-dialog {
+            background: white; border-radius: 16px; padding: 24px 28px;
+            width: 320px; max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .bi-update-dialog h3 { margin: 0 0 16px; font-size: 16px; }
+        .bi-update-dialog input {
+            width: 100%; padding: 10px 14px; border: 2px solid #ddd;
+            border-radius: 8px; font-size: 18px; text-align: center;
+            box-sizing: border-box; margin-bottom: 14px;
+        }
+        .bi-update-dialog input:focus { border-color: #667eea; outline: none; }
+        .bi-update-actions {
+            display: flex; gap: 10px; justify-content: flex-end;
+        }
+        .bi-update-actions button {
+            padding: 9px 22px; border-radius: 8px; font-size: 14px;
+            font-weight: bold; cursor: pointer; border: none;
+        }
+        .bi-cancel-btn { background: #f0f0f0; color: #666; }
+        .bi-confirm-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* 趨勢圖 */
+        .bi-chart-wrap {
+            background: white; border-radius: 12px; padding: 16px;
+            border: 1px solid #e0e0e0;
+        }
+        .bi-chart-wrap canvas { max-height: 350px; }
+        .bi-empty { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -1445,7 +1672,6 @@
             <button class="tab" onclick="showTab('tactical')">🏸 戰術板</button>
             <!-- 新增：計分板按鈕 -->
             <button class="tab" onclick="showTab('scoreboard')">🏆 計分板</button>
-            <button class="tab" onclick="showTab('ballpurchase')">🛒 買球記帳</button>
             <button class="tab" onclick="showTab('splitcalc')">💰 分帳計算</button>
             <button class="tab" onclick="showTab('publicaccount')">📒 公帳紀錄</button>
         </div>
@@ -1604,55 +1830,58 @@
             </div>
         </div>
 
-        <!-- 買球記帳 -->
-        <div id="ballpurchase" class="tab-content">
-            <div class="section">
-                <h2>🛒 買球記帳</h2>
-
-                <!-- 新增表單 -->
-                <div class="bp-form">
-                    <h3>➕ 新增一筆</h3>
-                    <div class="bp-form-grid">
-                        <div class="form-group">
-                            <label>👤 購買者</label>
-                            <select id="bp-buyer"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>🏸 品牌</label>
-                            <input type="text" id="bp-brand" placeholder="例: Yonex AS-30">
-                        </div>
-                        <div class="form-group">
-                            <label>📦 數量（筒）</label>
-                            <input type="number" id="bp-qty" value="1" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label>💰 金額（元）</label>
-                            <input type="number" id="bp-amount" placeholder="例: 800" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label>📅 日期</label>
-                            <input type="date" id="bp-date">
-                        </div>
-                        <div class="form-group">
-                            <label>📝 備註</label>
-                            <input type="text" id="bp-note" placeholder="選填">
-                        </div>
-                    </div>
-                    <button class="bp-add-btn" id="bp-add-btn" onclick="addBallPurchase()">新增記錄</button>
-                </div>
-
-                <!-- 合計摘要 -->
-                <div id="bp-summary"></div>
-
-                <!-- 記錄列表 -->
-                <div id="bp-list"><div class="bp-loading">⏳ 載入中...</div></div>
-            </div>
-        </div>
-
         <!-- 分帳計算分頁 -->
         <div id="splitcalc" class="tab-content">
             <div class="section tier-page">
                 <h2>💰 分帳計算</h2>
+
+                <!-- 子分頁切換 -->
+                <div class="sub-tab-bar">
+                    <button class="sub-tab-btn" onclick="showSplitSubTab('old-split')" id="sub-tab-old">2026/03 舊分帳模式</button>
+                    <button class="sub-tab-btn active" onclick="showSplitSubTab('new-split')" id="sub-tab-new">新分帳模式 📦球的分配與庫存</button>
+                </div>
+
+                <!-- ===== 舊分帳模式 ===== -->
+                <div class="sub-tab-content" id="sub-old-split">
+
+                <!-- 買球記帳（從舊 Tab 搬入）-->
+                <div class="bi-section" style="background:white;">
+                    <h3>🛒 買球記帳</h3>
+                    <div class="bp-form">
+                        <h3>➕ 新增一筆</h3>
+                        <div class="bp-form-grid">
+                            <div class="form-group">
+                                <label>👤 購買者</label>
+                                <select id="bp-buyer"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>🏸 品牌</label>
+                                <input type="text" id="bp-brand" placeholder="例: Yonex AS-30">
+                            </div>
+                            <div class="form-group">
+                                <label>📦 數量（筒）</label>
+                                <input type="number" id="bp-qty" value="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label>💰 金額（元）</label>
+                                <input type="number" id="bp-amount" placeholder="例: 800" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>📅 日期</label>
+                                <input type="date" id="bp-date">
+                            </div>
+                            <div class="form-group">
+                                <label>📝 備註</label>
+                                <input type="text" id="bp-note" placeholder="選填">
+                            </div>
+                        </div>
+                        <button class="bp-add-btn" id="bp-add-btn" onclick="addBallPurchase()">新增記錄</button>
+                    </div>
+                    <div id="bp-summary"></div>
+                    <div id="bp-list"><div class="bp-loading">⏳ 載入中...</div></div>
+                </div>
+
+                <hr style="border:none;border-top:2px solid #eee;margin:10px 0;">
 
                 <!-- 球員池 -->
                 <div class="player-pool-wrap">
@@ -1763,6 +1992,85 @@
                         <div class="split-total-check" id="split-total-check"></div>
                     </div>
                 </div>
+
+                </div><!-- end sub-old-split -->
+
+                <!-- ===== 新分帳模式：球的分配與庫存 ===== -->
+                <div class="sub-tab-content active" id="sub-new-split">
+
+                    <!-- 進貨與分配 -->
+                    <div class="bi-section">
+                        <h3>📦 進貨與分配</h3>
+                        <div class="bi-form-grid">
+                            <div class="bi-form-field">
+                                <label>日期</label>
+                                <input type="date" id="bi-date">
+                            </div>
+                            <div class="bi-form-field">
+                                <label>總桶數</label>
+                                <input type="number" id="bi-total-tubes" min="1" placeholder="例：50" oninput="updateBiRemaining()">
+                            </div>
+                            <div class="bi-form-field">
+                                <label>總金額</label>
+                                <input type="number" id="bi-total-cost" min="0" placeholder="例：25000">
+                            </div>
+                            <div class="bi-form-field">
+                                <label>購買人</label>
+                                <select id="bi-buyer"></select>
+                            </div>
+                            <div class="bi-form-field">
+                                <label>備註</label>
+                                <input type="text" id="bi-note" placeholder="品牌型號等">
+                            </div>
+                        </div>
+
+                        <!-- 球員分配器 -->
+                        <div class="bi-dist-wrap">
+                            <div class="bi-dist-header">
+                                <span>👥 分配給球員</span>
+                                <span class="bi-dist-remaining" id="bi-dist-remaining">剩餘未分配：0 桶</span>
+                            </div>
+                            <div class="bi-dist-grid" id="bi-dist-grid"></div>
+                        </div>
+
+                        <button class="bi-add-btn" id="bi-add-btn" onclick="addBiPurchase()">新增進貨紀錄</button>
+                    </div>
+
+                    <!-- 進貨歷史 -->
+                    <div class="bi-section">
+                        <h3>📋 進貨歷史</h3>
+                        <div id="bi-purchase-list"><div class="bi-empty">⏳ 載入中...</div></div>
+                    </div>
+
+                    <!-- 庫存狀態 -->
+                    <div class="bi-section">
+                        <h3>🏠 庫存狀態　<span style="font-size:12px;color:#888;font-weight:normal;">（點擊更新剩餘數量）</span></h3>
+                        <div id="bi-stock-list"><div class="bi-empty">⏳ 載入中...</div></div>
+                    </div>
+
+                    <!-- 庫存更新對話框 -->
+                    <div class="bi-update-overlay" id="bi-update-overlay" style="display:none;">
+                        <div class="bi-update-dialog">
+                            <h3 id="bi-update-title">更新庫存</h3>
+                            <p style="font-size:13px;color:#888;margin:0 0 12px;">請輸入目前手上剩餘桶數</p>
+                            <input type="number" id="bi-update-input" min="0" placeholder="剩餘桶數">
+                            <div class="bi-update-actions">
+                                <button class="bi-cancel-btn" onclick="closeBiUpdateDialog()">取消</button>
+                                <button class="bi-confirm-btn" onclick="confirmBiUpdate()">更新</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用球趨勢 -->
+                    <div class="bi-section">
+                        <h3>📈 用球趨勢</h3>
+                        <div class="bi-chart-wrap">
+                            <canvas id="bi-trend-chart"></canvas>
+                        </div>
+                    </div>
+
+                </div><!-- end sub-new-split -->
+
             </div>
         </div>
 
@@ -3100,6 +3408,520 @@
             });
         }
 
+        // ============================================
+        // === 子分頁切換 ===
+        // ============================================
+        function showSplitSubTab(which) {
+            document.getElementById('sub-old-split').classList.toggle('active', which === 'old-split');
+            document.getElementById('sub-new-split').classList.toggle('active', which === 'new-split');
+            document.getElementById('sub-tab-old').classList.toggle('active', which === 'old-split');
+            document.getElementById('sub-tab-new').classList.toggle('active', which === 'new-split');
+            if (which === 'old-split') {
+                initBallPurchase();
+                initSplitCalcTab();
+            }
+            if (which === 'new-split') {
+                initBallInventory();
+            }
+        }
+
+        // ============================================
+        // === 球的分配與庫存 ===
+        // ============================================
+        let biData = { purchases: [], inventoryLogs: [] };
+        let biChart = null;
+        let biUpdatePlayer = null;
+
+        async function initBallInventory() {
+            // 初始化日期
+            document.getElementById('bi-date').value = new Date().toISOString().slice(0, 10);
+            // 初始化購買人下拉
+            const buyerSel = document.getElementById('bi-buyer');
+            if (buyerSel.options.length === 0) {
+                players.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.label;
+                    opt.textContent = p.label;
+                    buyerSel.appendChild(opt);
+                });
+            }
+            // 建立球員分配器
+            renderBiDistGrid();
+            // 載入資料
+            await loadBallInventory();
+        }
+
+        function renderBiDistGrid() {
+            const grid = document.getElementById('bi-dist-grid');
+            grid.innerHTML = '';
+            players.forEach((p, idx) => {
+                const item = document.createElement('div');
+                item.className = 'bi-dist-item';
+                item.innerHTML = `
+                    <input type="checkbox" id="bi-chk-${idx}">
+                    <label for="bi-chk-${idx}">${p.label}</label>
+                    <input type="number" id="bi-qty-${idx}" min="0" value="0" style="display:none;" oninput="updateBiRemaining()">
+                `;
+                const chk = item.querySelector('input[type="checkbox"]');
+                const qty = item.querySelector('input[type="number"]');
+                chk.addEventListener('change', () => {
+                    qty.style.display = chk.checked ? '' : 'none';
+                    item.classList.toggle('checked', chk.checked);
+                    if (chk.checked) { qty.value = 1; qty.focus(); }
+                    else qty.value = 0;
+                    updateBiRemaining();
+                });
+                grid.appendChild(item);
+            });
+        }
+
+        function updateBiRemaining() {
+            const total = parseInt(document.getElementById('bi-total-tubes').value) || 0;
+            let distributed = 0;
+            players.forEach((p, idx) => {
+                const chk = document.getElementById('bi-chk-' + idx);
+                if (chk && chk.checked) {
+                    distributed += parseInt(document.getElementById('bi-qty-' + idx).value) || 0;
+                }
+            });
+            const remaining = total - distributed;
+            const el = document.getElementById('bi-dist-remaining');
+            el.textContent = `剩餘未分配：${remaining} 桶`;
+            el.style.color = remaining < 0 ? '#e53935' : '#667eea';
+        }
+
+        async function loadBallInventory() {
+            try {
+                const resp = await fetch(`${WORKER_URL}/ball-inventory`);
+                const data = await resp.json();
+                if (data.success) {
+                    biData = { purchases: data.purchases || [], inventoryLogs: data.inventoryLogs || [] };
+                }
+            } catch { /* 後端不可用 */ }
+            renderBiPurchaseList();
+            renderBiStockList();
+            renderBiChart();
+        }
+
+        async function addBiPurchase() {
+            const date = document.getElementById('bi-date').value;
+            const totalTubes = parseInt(document.getElementById('bi-total-tubes').value) || 0;
+            const totalCost = parseInt(document.getElementById('bi-total-cost').value) || 0;
+            const buyer = document.getElementById('bi-buyer').value;
+            const note = document.getElementById('bi-note').value.trim();
+
+            if (totalTubes <= 0) { alert('請填入總桶數'); return; }
+
+            const distributions = {};
+            players.forEach((p, idx) => {
+                const chk = document.getElementById('bi-chk-' + idx);
+                if (chk && chk.checked) {
+                    const qty = parseInt(document.getElementById('bi-qty-' + idx).value) || 0;
+                    if (qty > 0) distributions[p.label] = qty;
+                }
+            });
+
+            if (Object.keys(distributions).length === 0) { alert('請至少分配給一位球員'); return; }
+
+            const btn = document.getElementById('bi-add-btn');
+            btn.disabled = true; btn.textContent = '新增中...';
+            try {
+                const resp = await fetch(`${WORKER_URL}/ball-inventory/purchase`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, totalTubes, totalCost, buyer, note, distributions }),
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    // 清空表單
+                    document.getElementById('bi-total-tubes').value = '';
+                    document.getElementById('bi-total-cost').value = '';
+                    document.getElementById('bi-note').value = '';
+                    players.forEach((p, idx) => {
+                        const chk = document.getElementById('bi-chk-' + idx);
+                        if (chk) { chk.checked = false; }
+                        const qty = document.getElementById('bi-qty-' + idx);
+                        if (qty) { qty.value = 0; qty.style.display = 'none'; }
+                    });
+                    updateBiRemaining();
+                    await loadBallInventory();
+                } else {
+                    alert('新增失敗：' + data.error);
+                }
+            } catch { alert('無法連接後端'); }
+            finally { btn.disabled = false; btn.textContent = '新增進貨紀錄'; }
+        }
+
+        async function deleteBiPurchase(id) {
+            if (!confirm('確定要刪除這筆進貨紀錄？相關的庫存紀錄也會一併刪除。')) return;
+            try {
+                const resp = await fetch(`${WORKER_URL}/ball-inventory/purchase/${id}`, { method: 'DELETE' });
+                const data = await resp.json();
+                if (data.success) await loadBallInventory();
+                else alert('刪除失敗：' + data.error);
+            } catch { alert('無法連接後端'); }
+        }
+
+        function renderBiPurchaseList() {
+            const el = document.getElementById('bi-purchase-list');
+            if (biData.purchases.length === 0) {
+                el.innerHTML = '<div class="bi-empty">📭 還沒有進貨紀錄</div>';
+                return;
+            }
+            el.innerHTML = '';
+            biData.purchases.forEach(p => {
+                const unitPrice = p.totalCost > 0 && p.totalTubes > 0 ? Math.round(p.totalCost / p.totalTubes) : 0;
+                const distChips = Object.entries(p.distributions || {})
+                    .map(([name, qty]) => `<span class="bi-purchase-chip">${name} ×${qty}</span>`).join('');
+                const distTotal = Object.values(p.distributions || {}).reduce((s, q) => s + q, 0);
+                const card = document.createElement('div');
+                card.className = 'bi-purchase-card';
+                card.id = 'bi-card-' + p.id;
+                card.innerHTML = `
+                    <div class="bi-purchase-header">
+                        <span class="bi-purchase-date">📅 ${p.date}${p.buyer ? '　👤 ' + p.buyer : ''}${p.note ? '　' + p.note : ''}</span>
+                        <div class="bi-purchase-header-actions">
+                            <button onclick="startEditPurchase('${p.id}')" title="編輯">✏️</button>
+                            <button onclick="deleteBiPurchase('${p.id}')" title="刪除">🗑</button>
+                        </div>
+                    </div>
+                    <div class="bi-purchase-stats">
+                        共 <b>${p.totalTubes}</b> 桶　已分配 <b>${distTotal}</b> 桶
+                        ${unitPrice > 0 ? '　每桶 <b>$' + unitPrice.toLocaleString() + '</b>' : ''}
+                        ${p.totalCost > 0 ? '　總額 <b>$' + p.totalCost.toLocaleString() + '</b>' : ''}
+                    </div>
+                    <div class="bi-purchase-dist">${distChips}</div>
+                    <div class="bi-edit-form" id="bi-edit-${p.id}" style="display:none;"></div>
+                `;
+                el.appendChild(card);
+            });
+        }
+
+        function startEditPurchase(id) {
+            const p = biData.purchases.find(x => x.id === id);
+            if (!p) return;
+            const form = document.getElementById('bi-edit-' + id);
+            if (!form) return;
+
+            // 購買人 options
+            const buyerOptions = players.map(pl =>
+                `<option value="${pl.label}"${pl.label === p.buyer ? ' selected' : ''}>${pl.label}</option>`
+            ).join('');
+
+            // 球員分配 checkboxes
+            const distItems = players.map((pl, idx) => {
+                const qty = (p.distributions && p.distributions[pl.label]) || 0;
+                const checked = qty > 0;
+                return `<div class="bi-dist-item${checked ? ' checked' : ''}">
+                    <input type="checkbox" id="bi-edit-chk-${id}-${idx}"${checked ? ' checked' : ''} onchange="toggleEditDist(this)">
+                    <label for="bi-edit-chk-${id}-${idx}">${pl.label}</label>
+                    <input type="number" id="bi-edit-qty-${id}-${idx}" min="0" value="${qty}" style="display:${checked ? '' : 'none'}">
+                </div>`;
+            }).join('');
+
+            form.innerHTML = `
+                <div class="bi-form-grid">
+                    <div class="bi-form-field">
+                        <label>日期</label>
+                        <input type="date" id="bi-edit-date-${id}" value="${p.date}">
+                    </div>
+                    <div class="bi-form-field">
+                        <label>總桶數</label>
+                        <input type="number" id="bi-edit-tubes-${id}" value="${p.totalTubes}" min="1">
+                    </div>
+                    <div class="bi-form-field">
+                        <label>總金額</label>
+                        <input type="number" id="bi-edit-cost-${id}" value="${p.totalCost}" min="0">
+                    </div>
+                    <div class="bi-form-field">
+                        <label>購買人</label>
+                        <select id="bi-edit-buyer-${id}">${buyerOptions}</select>
+                    </div>
+                    <div class="bi-form-field">
+                        <label>備註</label>
+                        <input type="text" id="bi-edit-note-${id}" value="${p.note || ''}">
+                    </div>
+                </div>
+                <div style="font-size:13px;font-weight:bold;color:#555;margin-bottom:8px;">👥 分配明細</div>
+                <div class="bi-edit-dist-grid">${distItems}</div>
+                <div class="bi-edit-actions">
+                    <button class="bi-edit-cancel" onclick="cancelEditPurchase('${id}')">取消</button>
+                    <button class="bi-edit-save" onclick="saveEditPurchase('${id}')">儲存</button>
+                </div>
+            `;
+            form.style.display = '';
+        }
+
+        function toggleEditDist(chk) {
+            const item = chk.closest('.bi-dist-item');
+            const qty = item.querySelector('input[type="number"]');
+            item.classList.toggle('checked', chk.checked);
+            qty.style.display = chk.checked ? '' : 'none';
+            if (chk.checked && (parseInt(qty.value) || 0) === 0) { qty.value = 1; qty.focus(); }
+            if (!chk.checked) qty.value = 0;
+        }
+
+        function cancelEditPurchase(id) {
+            const form = document.getElementById('bi-edit-' + id);
+            if (form) { form.style.display = 'none'; form.innerHTML = ''; }
+        }
+
+        async function saveEditPurchase(id) {
+            const date = document.getElementById('bi-edit-date-' + id).value;
+            const totalTubes = parseInt(document.getElementById('bi-edit-tubes-' + id).value) || 0;
+            const totalCost = parseInt(document.getElementById('bi-edit-cost-' + id).value) || 0;
+            const buyer = document.getElementById('bi-edit-buyer-' + id).value;
+            const note = document.getElementById('bi-edit-note-' + id).value.trim();
+
+            if (totalTubes <= 0) { alert('請填入總桶數'); return; }
+
+            const distributions = {};
+            players.forEach((p, idx) => {
+                const chk = document.getElementById('bi-edit-chk-' + id + '-' + idx);
+                if (chk && chk.checked) {
+                    const qty = parseInt(document.getElementById('bi-edit-qty-' + id + '-' + idx).value) || 0;
+                    if (qty > 0) distributions[p.label] = qty;
+                }
+            });
+
+            try {
+                const resp = await fetch(`${WORKER_URL}/ball-inventory/purchase/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, totalTubes, totalCost, buyer, note, distributions }),
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    await loadBallInventory();
+                } else {
+                    alert('更新失敗：' + data.error);
+                }
+            } catch { alert('無法連接後端'); }
+        }
+
+        // ====== 庫存狀態 ======
+        function getPlayerStock() {
+            // 計算每人的：總分配數、最新剩餘數
+            const result = {};
+            // 從進貨紀錄算總分配
+            biData.purchases.forEach(p => {
+                for (const [name, qty] of Object.entries(p.distributions || {})) {
+                    if (!result[name]) result[name] = { totalAlloc: 0, remaining: 0, lastUpdate: null };
+                    result[name].totalAlloc += qty;
+                }
+            });
+            // 從庫存紀錄取最新剩餘
+            const sorted = [...biData.inventoryLogs].sort((a, b) => a.date.localeCompare(b.date));
+            sorted.forEach(log => {
+                if (!result[log.player]) result[log.player] = { totalAlloc: 0, remaining: 0, lastUpdate: null };
+                result[log.player].remaining = log.remaining;
+                result[log.player].lastUpdate = log.date;
+            });
+            return result;
+        }
+
+        function renderBiStockList() {
+            const el = document.getElementById('bi-stock-list');
+            const stock = getPlayerStock();
+            const entries = Object.entries(stock).filter(([_, v]) => v.totalAlloc > 0);
+            if (entries.length === 0) {
+                el.innerHTML = '<div class="bi-empty">📭 還沒有分配紀錄</div>';
+                return;
+            }
+
+            // 按剩餘數量排序（少的在上面）
+            entries.sort((a, b) => a[1].remaining - b[1].remaining);
+
+            // 找出最大分配數，作為血條 100% 的基準
+            const maxAlloc = Math.max(...entries.map(([_, v]) => v.totalAlloc));
+
+            el.innerHTML = '';
+            entries.forEach(([name, info]) => {
+                // 血條寬度按絕對數量（相對於最大分配數）
+                const barPct = maxAlloc > 0 ? Math.round((info.remaining / maxAlloc) * 100) : 0;
+                // 顏色按個人剩餘比例
+                const ratio = info.totalAlloc > 0 ? info.remaining / info.totalAlloc : 0;
+                const colorClass = ratio > 0.5 ? 'green' : ratio > 0.25 ? 'yellow' : 'red';
+
+                const warnText = info.remaining === 0 ? '🔴 已用完'
+                    : ratio <= 0.25 ? '⚠️ 快用完'
+                    : '';
+
+                const item = document.createElement('div');
+                item.className = 'bi-stock-item';
+                item.onclick = () => openBiUpdateDialog(name, info.remaining);
+                item.innerHTML = `
+                    <div class="bi-stock-name">${name}</div>
+                    <div class="bi-stock-bar-wrap">
+                        <div class="bi-stock-bar ${colorClass}" style="width:${barPct}%"></div>
+                        <div class="bi-stock-label">${info.remaining} / ${info.totalAlloc} 桶</div>
+                    </div>
+                    <div class="bi-stock-info">
+                        ${warnText ? '<span class="bi-stock-warn">' + warnText + '</span>' : ''}
+                    </div>
+                `;
+                el.appendChild(item);
+            });
+        }
+
+        function openBiUpdateDialog(player, current) {
+            biUpdatePlayer = player;
+            document.getElementById('bi-update-title').textContent = `更新庫存 — ${player}（目前 ${current} 桶）`;
+            const input = document.getElementById('bi-update-input');
+            input.value = current;
+            input.max = current;
+            input.min = 0;
+            document.getElementById('bi-update-overlay').style.display = 'flex';
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closeBiUpdateDialog() {
+            document.getElementById('bi-update-overlay').style.display = 'none';
+            biUpdatePlayer = null;
+        }
+
+        async function confirmBiUpdate() {
+            if (!biUpdatePlayer) return;
+            const input = document.getElementById('bi-update-input');
+            const remaining = parseInt(input.value);
+            const maxVal = parseInt(input.max);
+            if (isNaN(remaining) || remaining < 0) { alert('請輸入有效數字'); return; }
+            if (remaining > maxVal) { alert(`數量只能減少，不能超過目前的 ${maxVal} 桶`); return; }
+            try {
+                const resp = await fetch(`${WORKER_URL}/ball-inventory/update-stock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ player: biUpdatePlayer, remaining }),
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    closeBiUpdateDialog();
+                    await loadBallInventory();
+                } else {
+                    alert('更新失敗：' + data.error);
+                }
+            } catch { alert('無法連接後端'); }
+        }
+
+        // ====== 用球趨勢圖表 ======
+        function renderBiChart() {
+            const canvas = document.getElementById('bi-trend-chart');
+            if (!canvas) return;
+
+            // 整理資料：每位球員的時間序列
+            const stock = getPlayerStock();
+            const playerNames = Object.keys(stock).filter(n => stock[n].totalAlloc > 0);
+            if (playerNames.length === 0) {
+                if (biChart) { biChart.destroy(); biChart = null; }
+                return;
+            }
+
+            // 蒐集所有時間點
+            const allDates = new Set();
+            biData.inventoryLogs.forEach(l => {
+                if (playerNames.includes(l.player)) {
+                    allDates.add(l.date.slice(0, 10));
+                }
+            });
+            const sortedDates = [...allDates].sort();
+
+            if (sortedDates.length === 0) {
+                if (biChart) { biChart.destroy(); biChart = null; }
+                return;
+            }
+
+            // 顏色池
+            const colors = [
+                '#667eea','#e53935','#43a047','#ff9800','#9c27b0',
+                '#00bcd4','#ff5722','#795548','#607d8b','#f44336',
+                '#3f51b5','#009688','#ffc107','#8bc34a','#673ab7',
+            ];
+
+            // 為每人建立資料序列
+            const datasets = playerNames.map((name, i) => {
+                const logs = biData.inventoryLogs
+                    .filter(l => l.player === name)
+                    .sort((a, b) => a.date.localeCompare(b.date));
+
+                const dataPoints = sortedDates.map(d => {
+                    // 找到該日期或之前最近的紀錄
+                    const before = logs.filter(l => l.date.slice(0, 10) <= d);
+                    return before.length > 0 ? before[before.length - 1].remaining : null;
+                });
+
+                return {
+                    label: name,
+                    data: dataPoints,
+                    borderColor: colors[i % colors.length],
+                    backgroundColor: colors[i % colors.length] + '20',
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: false,
+                };
+            }).filter(ds => ds.data.some(v => v !== null));
+
+            // 全體合計趨勢線
+            const totalData = sortedDates.map((d, i) => {
+                let sum = 0;
+                let hasAny = false;
+                datasets.forEach(ds => {
+                    if (ds.data[i] !== null) { sum += ds.data[i]; hasAny = true; }
+                });
+                return hasAny ? sum : null;
+            });
+            datasets.unshift({
+                label: '全體合計',
+                data: totalData,
+                borderColor: '#222',
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                borderDash: [6, 3],
+                tension: 0.3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointStyle: 'rectRot',
+                fill: false,
+            });
+
+            const chartData = {
+                labels: sortedDates,
+                datasets,
+            };
+
+            if (biChart) {
+                biChart.data = chartData;
+                biChart.update();
+            } else {
+                biChart = new Chart(canvas, {
+                    type: 'line',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `${ctx.dataset.label}：${ctx.parsed.y} 桶`,
+                                }
+                            },
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: '剩餘桶數' },
+                                ticks: { stepSize: 1 },
+                            },
+                            x: {
+                                title: { display: true, text: '日期' },
+                            },
+                        },
+                    },
+                });
+            }
+        }
+
         // === 分帳計算結束 ===
 
         // === 公帳紀錄 ===
@@ -3243,8 +4065,12 @@
                 setTimeout(() => recalculatePlayerPositions(), 100);
             }
             if (tabName === 'splitcalc') {
-                // 延遲一下確保 DOM 已顯示
-                setTimeout(() => initSplitCalcTab(), 50);
+                // 根據目前選中的子分頁決定初始化哪一個
+                if (document.getElementById('sub-tab-new').classList.contains('active')) {
+                    setTimeout(() => initBallInventory(), 50);
+                } else {
+                    setTimeout(() => initSplitCalcTab(), 50);
+                }
             }
             if (tabName === 'publicaccount') {
                 loadPublicAccount();
@@ -3258,7 +4084,6 @@
             initMembershipTab();
             initTacticalBoard();
             initScoreboard();
-            initBallPurchase();
             initPublicAccountTab();
             updateSplitCalc(); // 預先渲染計算結果
             restoreGeneratorState(); // 還原當日通知產生器狀態
