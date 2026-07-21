@@ -3749,7 +3749,7 @@
 
                 const item = document.createElement('div');
                 item.className = 'bi-stock-item';
-                item.onclick = () => openBiUpdateDialog(name, info.remaining);
+                item.onclick = () => openBiUpdateDialog(name, info.remaining, info.totalAlloc);
                 item.innerHTML = `
                     <div class="bi-stock-name">${name}</div>
                     <div class="bi-stock-bar-wrap">
@@ -3764,12 +3764,12 @@
             });
         }
 
-        function openBiUpdateDialog(player, current) {
+        function openBiUpdateDialog(player, current, totalAlloc) {
             biUpdatePlayer = player;
-            document.getElementById('bi-update-title').textContent = `更新庫存 — ${player}（目前 ${current} 桶）`;
+            document.getElementById('bi-update-title').textContent = `更新庫存 — ${player}（目前 ${current} / 分配 ${totalAlloc} 桶）`;
             const input = document.getElementById('bi-update-input');
             input.value = current;
-            input.max = current;
+            input.max = totalAlloc;
             input.min = 0;
             document.getElementById('bi-update-overlay').style.display = 'flex';
             setTimeout(() => input.focus(), 100);
@@ -3786,7 +3786,7 @@
             const remaining = parseInt(input.value);
             const maxVal = parseInt(input.max);
             if (isNaN(remaining) || remaining < 0) { alert('請輸入有效數字'); return; }
-            if (remaining > maxVal) { alert(`數量只能減少，不能超過目前的 ${maxVal} 桶`); return; }
+            if (remaining > maxVal) { alert(`不能超過分配總數 ${maxVal} 桶`); return; }
             try {
                 const resp = await fetch(`${WORKER_URL}/ball-inventory/update-stock`, {
                     method: 'POST',
