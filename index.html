@@ -1445,7 +1445,6 @@
             border-bottom: 3px solid transparent;
             margin-bottom: -2px;
             transition: all 0.2s;
-            white-space: nowrap;
         }
         .sub-tab-btn:hover { color: #667eea; }
         .sub-tab-btn.active {
@@ -1656,8 +1655,28 @@
             background: white; border-radius: 12px; padding: 16px;
             border: 1px solid #e0e0e0;
         }
-        .bi-chart-wrap canvas { max-height: 350px; }
+        .bi-chart-wrap canvas { height: 350px !important; }
         .bi-empty { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
+
+        /* ========= 球的分配與庫存 — 手機響應式 ========= */
+        @media (max-width: 768px) {
+            .sub-tab-bar { gap: 0; }
+            .sub-tab-btn { padding: 8px 10px; font-size: 12px; text-align: center; flex: 1; }
+
+            .bi-section { padding: 14px 12px; }
+            .bi-form-grid { grid-template-columns: 1fr; }
+            .bi-dist-grid { grid-template-columns: 1fr 1fr; }
+
+            .bi-stock-item {
+                flex-wrap: wrap; gap: 6px; padding: 10px 12px;
+            }
+            .bi-stock-name { min-width: unset; width: 100%; font-size: 13px; }
+            .bi-stock-bar-wrap { width: 100%; flex: unset; height: 24px; }
+            .bi-stock-info { width: 100%; text-align: left; }
+
+            .bi-chart-wrap { padding: 10px; }
+            .bi-chart-wrap canvas { height: 300px !important; }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -2026,11 +2045,11 @@
 
                         <!-- 球員分配器 -->
                         <div class="bi-dist-wrap">
-                            <div class="bi-dist-header">
-                                <span>👥 分配給球員</span>
+                            <div class="bi-dist-header" onclick="toggleDistGrid()" style="cursor:pointer;">
+                                <span>👥 分配給球員 <span id="bi-dist-toggle" style="font-size:12px;color:#aaa;">▶ 展開</span></span>
                                 <span class="bi-dist-remaining" id="bi-dist-remaining">剩餘未分配：0 桶</span>
                             </div>
-                            <div class="bi-dist-grid" id="bi-dist-grid"></div>
+                            <div class="bi-dist-grid" id="bi-dist-grid" style="display:none;"></div>
                         </div>
 
                         <button class="bi-add-btn" id="bi-add-btn" onclick="addBiPurchase()">新增進貨紀錄</button>
@@ -3451,6 +3470,14 @@
             await loadBallInventory();
         }
 
+        function toggleDistGrid() {
+            const grid = document.getElementById('bi-dist-grid');
+            const toggle = document.getElementById('bi-dist-toggle');
+            const isHidden = grid.style.display === 'none';
+            grid.style.display = isHidden ? '' : 'none';
+            toggle.textContent = isHidden ? '▼ 收合' : '▶ 展開';
+        }
+
         function renderBiDistGrid() {
             const grid = document.getElementById('bi-dist-grid');
             grid.innerHTML = '';
@@ -3898,9 +3925,9 @@
                     data: chartData,
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+                        maintainAspectRatio: false,
                         plugins: {
-                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { size: window.innerWidth < 768 ? 10 : 12 } } },
                             tooltip: {
                                 callbacks: {
                                     label: ctx => `${ctx.dataset.label}：${ctx.parsed.y} 桶`,
