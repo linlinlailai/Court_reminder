@@ -2442,6 +2442,13 @@
             return `${d.getMonth() + 1}/${d.getDate()}（週${WEEKDAYS_BAN[d.getDay()]}）`;
         }
 
+        function localDateStr(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
         async function renderBanList() {
             const listEl = document.getElementById('banList');
             if (!listEl) return;
@@ -2491,7 +2498,7 @@
                     playerId: sel.value,
                     playerLabel: sel.options[sel.selectedIndex].text,
                     banDate: banDateInput.value,
-                    availDate: avail.toISOString().slice(0, 10)
+                    availDate: localDateStr(avail)
                 })
             });
             banDateInput.value = '';
@@ -2507,7 +2514,7 @@
                 if (!this.value) { document.getElementById('banAvailDate').value = ''; return; }
                 const avail = new Date(this.value + 'T00:00:00');
                 avail.setDate(avail.getDate() + 8);
-                document.getElementById('banAvailDate').value = avail.toISOString().slice(0, 10);
+                document.getElementById('banAvailDate').value = localDateStr(avail);
             });
             renderBanList();
         }
