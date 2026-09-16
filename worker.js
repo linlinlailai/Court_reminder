@@ -92,6 +92,13 @@ export default {
                 return await deletePublicAccountRecord(env, id, origin);
             }
 
+            if (url.pathname === '/ban-records' && request.method === 'GET') return await getBanRecords(env, origin);
+            if (url.pathname === '/ban-records' && request.method === 'POST') return await addBanRecord(env, await request.json(), origin);
+            if (url.pathname.startsWith('/ban-records/') && request.method === 'DELETE') {
+                const id = url.pathname.replace('/ban-records/', '');
+                return await deleteBanRecord(env, id, origin);
+            }
+
             return jsonResp({ message: 'API ready', endpoints: ['GET /captcha', 'POST /login', 'GET /test', 'GET /ball-purchases', 'POST /ball-purchases', 'DELETE /ball-purchases/:id', 'GET /frequency-tiers', 'POST /frequency-tiers', 'GET /payment-status', 'POST /payment-status', 'GET /ball-inventory', 'POST /ball-inventory/purchase', 'PUT /ball-inventory/purchase/:id', 'DELETE /ball-inventory/purchase/:id', 'POST /ball-inventory/update-stock', 'GET /public-account', 'POST /public-account', 'DELETE /public-account/:id'] }, origin);
         } catch (error) {
             return jsonResp({ success: false, error: error.message, stack: error.stack }, origin, 500);
@@ -524,6 +531,35 @@ async function deleteBallInventoryPurchase(env, id, origin) {
     // 刪除該筆進貨產生的庫存紀錄
     data.inventoryLogs = data.inventoryLogs.filter(l => l.purchaseId !== id);
     await saveInventoryData(env, data);
+    return jsonResp({ success: true }, origin);
+}
+
+// === 禁用卡號 API 處理函數 ===
+const BAN_RECORDS_KV_KEY = 'ban_records';
+
+async function getBanRecords(env, origin) {
+    const raw = await env.BALL_KV.get(BAN_RECORDS_KV_KEY);
+    const records = raw ? JSON.parse(raw) : [];
+    return jsonResp({ success: true, records }, origin);
+}
+
+async function addBanRecord(env, body, origin) {
+    const { playerId, playerLabel, banDate, availDate } = body;
+    if (!playerId || !playerLabel || !banDate || !availDate) {
+        return jsonResp({ success: false, error: '缺少必要欄位' }, origin, 400);
+    }
+    const raw = await env.BALL_KV.get(BAN_RECORDS_KV_KEY);
+    const records = raw ? JSON.parse(raw) : [];
+    records.push({ id: Date.now().toString(), playerId, playerLabel, banDate, availDate });
+    await env.BALL_KV.put(BAN_RECORDS_KV_KEY, JSON.stringify(records));
+    return jsonResp({ success: true }, origin);
+}
+
+async function deleteBanRecord(env, id, origin) {
+    if (!id) return jsonResp({ success: false, error: '缺少 id' }, origin, 400);
+    const raw = await env.BALL_KV.get(BAN_RECORDS_KV_KEY);
+    const records = raw ? JSON.parse(raw) : [];
+    await env.BALL_KV.put(BAN_RECORDS_KV_KEY, JSON.stringify(records.filter(r => r.id !== id)));
     return jsonResp({ success: true }, origin);
 }
 

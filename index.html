@@ -784,6 +784,113 @@
 
         /* === 板凳折疊區塊樣式結束 === */
 
+        /* === 禁用卡號區塊 === */
+        .ban-toggle {
+            color: #c0392b;
+            border: none;
+            background: none;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+            margin-top: 25px;
+            margin-bottom: 0;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            user-select: none;
+            width: 100%;
+        }
+        .ban-toggle .toggle-arrow {
+            transition: transform 0.3s ease;
+            font-size: 14px;
+        }
+        .ban-toggle.open .toggle-arrow {
+            transform: rotate(180deg);
+        }
+        .ban-content-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .ban-content-wrapper.open {
+            max-height: 1200px;
+        }
+        .ban-record {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin: 6px 0;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+            background: #fff5f5;
+        }
+        .ban-record.expired {
+            border-left-color: #bdc3c7;
+            background: #f8f9fa;
+            opacity: 0.6;
+        }
+        .ban-record-info { flex: 1; }
+        .ban-record-name { font-weight: bold; font-size: 1em; }
+        .ban-record-dates { font-size: 0.85em; color: #666; margin-top: 2px; }
+        .ban-status-badge {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .ban-status-badge.active { background: #e74c3c; color: white; }
+        .ban-status-badge.expired { background: #bdc3c7; color: #555; }
+        .ban-del-btn {
+            background: none;
+            border: 1px solid #ddd;
+            color: #999;
+            border-radius: 4px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .ban-del-btn:hover { background: #fee; color: #e74c3c; border-color: #e74c3c; }
+        .ban-add-form {
+            margin-top: 14px;
+            padding: 14px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .ban-add-form label {
+            font-size: 0.85em;
+            color: #555;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .ban-add-form select, .ban-add-form input[type="date"] {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .ban-add-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 16px;
+            font-size: 0.9em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .ban-add-btn:hover { background: #c0392b; }
+        /* === 禁用卡號區塊結束 === */
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -1713,6 +1820,29 @@
                 <div class="bench-players-wrapper" id="benchWrapper">
                     <div class="player-grid" id="benchPlayerButtons"></div>
                 </div>
+
+                <div class="ban-toggle" id="banToggle" onclick="toggleBanBlock()">
+                    <span>🚫 禁用卡號紀錄</span>
+                    <span class="toggle-arrow">▼</span>
+                </div>
+                <div class="ban-content-wrapper" id="banWrapper">
+                    <div id="banList"></div>
+                    <div class="ban-add-form">
+                        <label>
+                            人員（卡號）
+                            <select id="banPlayerSelect"></select>
+                        </label>
+                        <label>
+                            禁用日期
+                            <input type="date" id="banDate">
+                        </label>
+                        <label>
+                            可使用日期（自動）
+                            <input type="date" id="banAvailDate" readonly style="background:#f5f5f5;cursor:default;">
+                        </label>
+                        <button class="ban-add-btn" onclick="addBanRecord()">＋ 新增</button>
+                    </div>
+                </div>
             </div>
 
             <div class="section">
@@ -1728,6 +1858,7 @@
                 <textarea id="output" readonly placeholder="請選擇時間和參與者來生成訊息"></textarea>
                 <div id="successMessage" class="success-message"></div>
             </div>
+
         </div>
 
         <div id="membership" class="tab-content">
@@ -2178,7 +2309,9 @@
             { id: "CF32054林宗翰314", label: "宗翰", bench: true },
             { id: "CK17851林裕明322", label: "裕明 Eric" },
             { id: "CS16015蕭豐坤207", label: "坤哥 Karl" },
-            { id: "CK17870吳定和504", label: "定和 River" }
+            { id: "CK17870吳定和504", label: "定和 River" },
+            { id: "CK17802郭玟慧236", label: "玟慧", bench: true },
+            { id: "CK17658林裕生734", label: "裕生 Victor", bench: true }
         ];
 
         // 戰術板相關變數 - 多點觸控支援
@@ -2294,6 +2427,89 @@
             });
             document.getElementById("output").value = message.trim();
             saveGeneratorState();
+        }
+
+        // === 禁用卡號管理 ===
+        const WEEKDAYS_BAN = ['日', '一', '二', '三', '四', '五', '六'];
+
+        function toggleBanBlock() {
+            document.getElementById('banToggle').classList.toggle('open');
+            document.getElementById('banWrapper').classList.toggle('open');
+        }
+
+        function formatBanDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            return `${d.getMonth() + 1}/${d.getDate()}（週${WEEKDAYS_BAN[d.getDay()]}）`;
+        }
+
+        async function renderBanList() {
+            const listEl = document.getElementById('banList');
+            if (!listEl) return;
+            listEl.innerHTML = '<p style="color:#aaa;font-size:0.9em;padding:10px 0;">載入中...</p>';
+            try {
+                const res = await fetch(`${WORKER_URL}/ban-records`);
+                const data = await res.json();
+                const records = data.records || [];
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                if (records.length === 0) {
+                    listEl.innerHTML = '<p style="color:#aaa;font-size:0.9em;padding:10px 0;">目前無禁用紀錄</p>';
+                    return;
+                }
+                listEl.innerHTML = records.map(r => {
+                    const availDate = new Date(r.availDate + 'T00:00:00');
+                    const isActive = availDate > today;
+                    return `<div class="ban-record ${isActive ? '' : 'expired'}">
+                        <div class="ban-record-info">
+                            <div class="ban-record-name">${r.playerLabel}</div>
+                            <div class="ban-record-dates">禁用：${formatBanDate(r.banDate)}　可用：${formatBanDate(r.availDate)}</div>
+                        </div>
+                        <span class="ban-status-badge ${isActive ? 'active' : 'expired'}">${isActive ? '禁用中' : '已解除'}</span>
+                        <button class="ban-del-btn" onclick="deleteBanRecord('${r.id}')">刪除</button>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                listEl.innerHTML = '<p style="color:#e74c3c;font-size:0.9em;padding:10px 0;">載入失敗</p>';
+            }
+        }
+
+        async function deleteBanRecord(id) {
+            if (!confirm('確定刪除此禁用紀錄？')) return;
+            await fetch(`${WORKER_URL}/ban-records/${id}`, { method: 'DELETE' });
+            renderBanList();
+        }
+
+        async function addBanRecord() {
+            const sel = document.getElementById('banPlayerSelect');
+            const banDateInput = document.getElementById('banDate');
+            if (!sel.value || !banDateInput.value) { alert('請選擇人員並輸入禁用日期'); return; }
+            const avail = new Date(banDateInput.value + 'T00:00:00');
+            avail.setDate(avail.getDate() + 8);
+            await fetch(`${WORKER_URL}/ban-records`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    playerId: sel.value,
+                    playerLabel: sel.options[sel.selectedIndex].text,
+                    banDate: banDateInput.value,
+                    availDate: avail.toISOString().slice(0, 10)
+                })
+            });
+            banDateInput.value = '';
+            document.getElementById('banAvailDate').value = '';
+            renderBanList();
+        }
+
+        function initBanBlock() {
+            const sel = document.getElementById('banPlayerSelect');
+            sel.innerHTML = '<option value="">-- 選擇人員 --</option>' +
+                players.map(p => `<option value="${p.id}">${p.label}（${p.id.slice(0, 7)}）</option>`).join('');
+            document.getElementById('banDate').addEventListener('change', function () {
+                if (!this.value) { document.getElementById('banAvailDate').value = ''; return; }
+                const avail = new Date(this.value + 'T00:00:00');
+                avail.setDate(avail.getDate() + 8);
+                document.getElementById('banAvailDate').value = avail.toISOString().slice(0, 10);
+            });
+            renderBanList();
         }
 
         // === 通知產生器自動儲存（當日） ===
@@ -4114,6 +4330,7 @@
             initPublicAccountTab();
             updateSplitCalc(); // 預先渲染計算結果
             restoreGeneratorState(); // 還原當日通知產生器狀態
+            initBanBlock();
         });
 
         // 視窗大小改變時重新調整圓點位置
