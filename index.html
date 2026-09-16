@@ -158,6 +158,19 @@
             border-color: #667eea;
         }
 
+        .player-grid button.banned {
+            border-color: #e74c3c;
+            background: #fff5f5;
+            color: #c0392b;
+        }
+
+        .player-grid button.banned.assigned {
+            background: #667eea;
+            color: white;
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 2px #e74c3c;
+        }
+
         .action-buttons {
             display: flex;
             gap: 15px;
@@ -2431,6 +2444,19 @@
 
         // === 禁用卡號管理 ===
         const WEEKDAYS_BAN = ['日', '一', '二', '三', '四', '五', '六'];
+        let activeBannedIds = new Set();
+
+        function applyBanWarnings() {
+            players.forEach(p => {
+                const btn = document.getElementById('btn_' + p.id);
+                if (!btn) return;
+                if (activeBannedIds.has(p.id)) {
+                    btn.classList.add('banned');
+                } else {
+                    btn.classList.remove('banned');
+                }
+            });
+        }
 
         function toggleBanBlock() {
             document.getElementById('banToggle').classList.toggle('open');
@@ -2458,6 +2484,10 @@
                 const data = await res.json();
                 const records = data.records || [];
                 const today = new Date(); today.setHours(0, 0, 0, 0);
+                activeBannedIds = new Set(
+                    records.filter(r => new Date(r.availDate + 'T00:00:00') > today).map(r => r.playerId)
+                );
+                applyBanWarnings();
                 if (records.length === 0) {
                     listEl.innerHTML = '<p style="color:#aaa;font-size:0.9em;padding:10px 0;">目前無禁用紀錄</p>';
                     return;
