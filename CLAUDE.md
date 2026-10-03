@@ -27,12 +27,30 @@ Six tabs (previously seven — 🛒 買球記帳 was merged into 💰 分帳計�
 
 | Tab | Function | Description |
 |-----|----------|-------------|
-| 📋 通知產生器 | `initNotificationTab()` | Generate LINE messages for court bookings |
+| 📋 通知產生器 | `createTimeButtons()` / `createPlayerButtons()` | Generate LINE messages for court bookings |
 | 🔍 會員快速查詢 | `initMembershipTab()` | Look up gym membership expiry via CAPTCHA login |
-| 🏸 戰術板 | `initTacticalBoard()` | Drag-drop player positions on court diagram |
-| 🏆 計分板 | `initScoreboard()` | In-game point tracking |
+| 🏸 戰術板 | `initTacticalBoard()` | Drag-drop player positions on court diagram (has fullscreen mode) |
+| 🏆 計分板 | `initScoreboard()` | In-game point tracking (has fullscreen mode) |
 | 💰 分帳計算 | `initSplitCalcTab()` / `initBallInventory()` | Two sub-tabs (see below) |
 | 📒 公帳紀錄 | `initPublicAccountTab()` | Club fund ledger: income/expense records + running balance |
+
+The page always opens on 📋 通知產生器 — the last-used tab is intentionally **not** remembered.
+
+### Mobile layout (≤768px)
+
+- **Tab bar:** a sticky 3×2 grid (`.tab-icon` emoji above `.tab-label`). After scrolling down past ~160px, `initCompactTabs()` adds `.compact`, shrinking it to a single thin row of emoji only; it expands again near the top (<40px). The two thresholds are deliberately different to avoid flicker.
+- **Time slot buttons:** all six sit in one row (6-column grid).
+
+### Fullscreen mode (戰術板 & 計分板)
+
+Both tabs share one implementation: `setFullscreen(el, open)` toggles `.fullscreen` on the element and `fs-open` on `<body>`. Wrappers are `toggleTacticalFullscreen()` (also re-places dots via `recalculatePlayerPositions()`) and `toggleScoreboardFullscreen()` (also holds a screen Wake Lock). `initFullscreen()` blocks `touchmove` inside `.fullscreen` (needed on iOS Safari) and closes on Esc. Each fullscreen element contains its own `.fs-close-btn` (✕).
+
+Tactical board dots/shuttlecock use `touch-action: none` and an enlarged `::after` hit area so dragging doesn't scroll the page.
+
+### 📋 通知產生器 — 時段與球員
+
+- `const times = [...]` — time slot buttons (currently 18:00–20:30, every 30 min). The generated message sorts slots with `Object.keys(...).sort()`, so keep the `HH:MM` format.
+- Players with `bench: true` in `players` are rendered into the collapsible 🪑 板凳 block instead of the main list. Moving a player between the main list and the bench = toggling this flag.
 
 ### 📋 通知產生器 — 🚫 禁用卡號紀錄
 
@@ -48,7 +66,7 @@ A collapsible block inside the notification tab (`initBanBlock()`) records playe
 **Key constants at top of `<script>`:**
 ```js
 const WORKER_URL = 'https://gym-query.linlinlailai.workers.dev';
-const players = [...]; // 34 players: { id: "<card no><name><suffix>", label: "<中文名> <English name>" }
+const players = [...]; // 34 players: { id: "<card no><name><suffix>", label: "<中文名> <English name>", bench?: true }
 ```
 
 ## Backend API (worker.js)
@@ -99,6 +117,11 @@ Players are sorted into tiers by annual attendance, each tier carrying a share w
 | C | ≤20/year | 1 |
 
 Share weights are adjustable via range sliders; costs auto-recalculate on any change.
+
+## Editing Notes
+
+- `index.html` is committed with **CRLF** line endings. Scripts that rewrite the file (e.g. Python) must preserve CRLF, otherwise the whole file shows up as changed in the diff.
+- No test suite exists. To check the mobile layout, serve the folder (`python -m http.server`) and view it at phone width; headless Edge/Chrome can't shrink the window below ~500px, so wrap the page in a 375px-wide `<iframe>` when taking screenshots.
 
 ## Archive Files
 
