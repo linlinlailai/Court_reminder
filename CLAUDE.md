@@ -34,6 +34,10 @@ Six tabs (previously seven — 🛒 買球記帳 was merged into 💰 分帳計�
 | 💰 分帳計算 | `initSplitCalcTab()` / `initBallInventory()` | Two sub-tabs (see below) |
 | 📒 公帳紀錄 | `initPublicAccountTab()` | Club fund ledger: income/expense records + running balance |
 
+### 📋 通知產生器 — 🚫 禁用卡號紀錄
+
+A collapsible block inside the notification tab (`initBanBlock()`) records players whose gym card is temporarily banned (ban date + date the card becomes usable again, computed in local time). Banned players still appear in the notification generator's player list but are flagged with a red warning. Records are stored in the backend via `/ban-records`.
+
 ### 💰 分帳計算 Sub-tabs
 
 | Sub-tab | Content |
@@ -44,7 +48,7 @@ Six tabs (previously seven — 🛒 買球記帳 was merged into 💰 分帳計�
 **Key constants at top of `<script>`:**
 ```js
 const WORKER_URL = 'https://gym-query.linlinlailai.workers.dev';
-const players = [...]; // 29 players with bilingual names
+const players = [...]; // 34 players: { id: "<card no><name><suffix>", label: "<中文名> <English name>" }
 ```
 
 ## Backend API (worker.js)
@@ -53,6 +57,7 @@ const players = [...]; // 29 players with bilingual names
 |--------|------|-------------|
 | GET | `/captcha` | Proxy gym CAPTCHA image + return session cookie |
 | POST | `/login` | Authenticate with gym, return membership expiry date |
+| GET | `/test` | Debug endpoint for the gym CAPTCHA fetch |
 | GET | `/ball-purchases` | Fetch all purchase records from KV |
 | POST | `/ball-purchases` | Add a new purchase record |
 | DELETE | `/ball-purchases/:id` | Delete a purchase record |
@@ -62,14 +67,25 @@ const players = [...]; // 29 players with bilingual names
 | POST | `/payment-status` | Save split-calc payment status |
 | GET | `/ball-inventory` | Fetch all purchase + inventory log data |
 | POST | `/ball-inventory/purchase` | Add a purchase with player distributions |
+| PUT | `/ball-inventory/purchase/:id` | Edit an existing purchase record |
 | DELETE | `/ball-inventory/purchase/:id` | Delete a purchase record |
 | POST | `/ball-inventory/update-stock` | Update a player's remaining tube count |
+| GET | `/public-account` | Fetch club fund ledger records |
+| POST | `/public-account` | Add an income/expense record |
+| DELETE | `/public-account/:id` | Delete a ledger record |
+| GET | `/ban-records` | Fetch banned-card records |
+| POST | `/ban-records` | Add a record (`playerId`, `playerLabel`, `banDate`, `availDate`) |
+| DELETE | `/ban-records/:id` | Delete a banned-card record |
 
 **KV keys:**
 - `ball_purchases` — array of purchase objects
 - `frequency_tiers` — object with S/A/B/C/unassigned arrays
 - `payment_status` — object mapping player name → paid boolean
 - `ball_inventory` — `{ purchases: [...], inventoryLogs: [...] }` for ball distribution & stock tracking
+- `public_account` — array of club fund ledger records
+- `ban_records` — array of `{ id, playerId, playerLabel, banDate, availDate }`
+
+When adding a new endpoint, also add it to the `endpoints` list in the fallback response at the end of the router in `worker.js`.
 
 ## Frequency Tier Logic
 

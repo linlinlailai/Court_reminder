@@ -99,7 +99,7 @@ export default {
                 return await deleteBanRecord(env, id, origin);
             }
 
-            return jsonResp({ message: 'API ready', endpoints: ['GET /captcha', 'POST /login', 'GET /test', 'GET /ball-purchases', 'POST /ball-purchases', 'DELETE /ball-purchases/:id', 'GET /frequency-tiers', 'POST /frequency-tiers', 'GET /payment-status', 'POST /payment-status', 'GET /ball-inventory', 'POST /ball-inventory/purchase', 'PUT /ball-inventory/purchase/:id', 'DELETE /ball-inventory/purchase/:id', 'POST /ball-inventory/update-stock', 'GET /public-account', 'POST /public-account', 'DELETE /public-account/:id'] }, origin);
+            return jsonResp({ message: 'API ready', endpoints: ['GET /captcha', 'POST /login', 'GET /test', 'GET /ball-purchases', 'POST /ball-purchases', 'DELETE /ball-purchases/:id', 'GET /frequency-tiers', 'POST /frequency-tiers', 'GET /payment-status', 'POST /payment-status', 'GET /ball-inventory', 'POST /ball-inventory/purchase', 'PUT /ball-inventory/purchase/:id', 'DELETE /ball-inventory/purchase/:id', 'POST /ball-inventory/update-stock', 'GET /public-account', 'POST /public-account', 'DELETE /public-account/:id', 'GET /ban-records', 'POST /ban-records', 'DELETE /ban-records/:id'] }, origin);
         } catch (error) {
             return jsonResp({ success: false, error: error.message, stack: error.stack }, origin, 500);
         }
