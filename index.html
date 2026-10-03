@@ -557,6 +557,93 @@
             transform: translateY(-2px);
         }
 
+        /* 圓點和羽球：禁止瀏覽器把拖曳當成捲動，並把可點範圍往外擴大 */
+        .player-dot,
+        .shuttlecock {
+            touch-action: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        .player-dot::after,
+        .shuttlecock::after {
+            content: "";
+            position: absolute;
+            inset: -12px;
+        }
+
+        .fs-open-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .fs-close-btn {
+            display: none;
+        }
+
+        /* 戰術板全螢幕模式 */
+        body.tactical-fs-open {
+            overflow: hidden;
+        }
+
+        .tactical-board.fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: #263238;
+            padding: 12px;
+            /* 頂端留空給 ✕ 按鈕，避免蓋到球場 */
+            padding-top: calc(68px + env(safe-area-inset-top));
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            justify-content: flex-start;
+            overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        .tactical-board.fullscreen .tactical-info {
+            display: none;
+        }
+
+        .tactical-board.fullscreen .court-container {
+            width: auto;
+            max-width: none;
+            /* 依畫面高度縮放，同時不超出寬度（球場比例 1:2.2） */
+            height: min(calc(100vh - 160px), calc((100vw - 24px) * 2.2));
+            height: min(calc(100dvh - 160px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), calc((100vw - 24px) * 2.2));
+            margin-bottom: 12px;
+        }
+
+        .tactical-board.fullscreen .fs-open-btn {
+            display: none;
+        }
+
+        .tactical-board.fullscreen .fs-close-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: max(12px, env(safe-area-inset-top));
+            right: 12px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 30;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
         .tactical-info {
             text-align: center;
             margin-bottom: 20px;
@@ -920,13 +1007,49 @@
             }
 
 
+            body {
+                padding: 8px;
+            }
+
+            .container {
+                padding: 12px;
+                margin: 0;
+            }
+
+            h1 {
+                font-size: 1.6em;
+                margin: 4px 0 12px;
+            }
+
+            /* 分頁列：3×2 小格子，捲動時固定在上方 */
             .tabs {
-                flex-direction: column;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                background: white;
+                padding: 6px 0;
+                margin-bottom: 16px;
+                border-bottom: 1px solid #eee;
             }
 
             .tab {
-                margin-right: 0;
-                margin-bottom: 5px;
+                margin: 0;
+                padding: 6px 4px;
+                border-radius: 10px;
+                font-size: 13px;
+                line-height: 1.3;
+            }
+
+            .tab.active {
+                transform: none;
+            }
+
+            .tab-icon {
+                display: block;
+                font-size: 20px;
             }
 
             .court-container {
@@ -1806,13 +1929,13 @@
         <h1>🏸 羽球小工具 </h1>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('generator')">📋 通知產生器</button>
-            <button class="tab" onclick="showTab('membership')">🔍 會員快速查詢</button>
-            <button class="tab" onclick="showTab('tactical')">🏸 戰術板</button>
+            <button class="tab active" onclick="showTab('generator')"><span class="tab-icon">📋</span> <span class="tab-label">通知產生器</span></button>
+            <button class="tab" onclick="showTab('membership')"><span class="tab-icon">🔍</span> <span class="tab-label">會員快速查詢</span></button>
+            <button class="tab" onclick="showTab('tactical')"><span class="tab-icon">🏸</span> <span class="tab-label">戰術板</span></button>
             <!-- 新增：計分板按鈕 -->
-            <button class="tab" onclick="showTab('scoreboard')">🏆 計分板</button>
-            <button class="tab" onclick="showTab('splitcalc')">💰 分帳計算</button>
-            <button class="tab" onclick="showTab('publicaccount')">📒 公帳紀錄</button>
+            <button class="tab" onclick="showTab('scoreboard')"><span class="tab-icon">🏆</span> <span class="tab-label">計分板</span></button>
+            <button class="tab" onclick="showTab('splitcalc')"><span class="tab-icon">💰</span> <span class="tab-label">分帳計算</span></button>
+            <button class="tab" onclick="showTab('publicaccount')"><span class="tab-icon">📒</span> <span class="tab-label">公帳紀錄</span></button>
         </div>
 
         <div id="generator" class="tab-content active">
@@ -1922,7 +2045,8 @@
         </div>
 
         <div id="tactical" class="tab-content">
-            <div class="tactical-board">
+            <div class="tactical-board" id="tacticalBoard">
+                <button class="fs-close-btn" onclick="toggleTacticalFullscreen(false)" aria-label="關閉全螢幕">✕</button>
                 <div class="tactical-info">
                     <h2>🏸 羽球戰術板</h2>
                     <p>拖拽圓點來討論戰術 • 四個圓點代表四名球員</p>
@@ -1969,6 +2093,7 @@
 
                 <div class="tactical-controls">
                     <button class="reset-btn" onclick="resetPlayerPositions()">🔄 重置位置</button>
+                    <button class="fs-open-btn" onclick="toggleTacticalFullscreen(true)">⛶ 全螢幕</button>
                 </div>
             </div>
         </div>
@@ -2789,6 +2914,15 @@
             document.addEventListener('touchend', touchEnd);
             document.addEventListener('touchcancel', touchEnd);
 
+            // 全螢幕時擋掉整個畫面的滑動（iOS Safari 只靠 overflow:hidden 鎖不住）
+            const board = document.getElementById('tacticalBoard');
+            board.addEventListener('touchmove', (e) => {
+                if (board.classList.contains('fullscreen')) e.preventDefault();
+            }, { passive: false });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && board.classList.contains('fullscreen')) toggleTacticalFullscreen(false);
+            });
+
             // 初始化位置
             setTimeout(() => {
                 resetPlayerPositions();
@@ -2922,6 +3056,15 @@
         function resetPlayerPositions() {
             currentPositions = JSON.parse(JSON.stringify(initialPositions));
             recalculatePlayerPositions();
+        }
+
+        // 戰術板全螢幕：滿版顯示並鎖住背後頁面的捲動
+        function toggleTacticalFullscreen(open) {
+            const board = document.getElementById('tacticalBoard');
+            board.classList.toggle('fullscreen', open);
+            document.body.classList.toggle('tactical-fs-open', open);
+            // 球場尺寸改變，依百分比重新擺放圓點
+            requestAnimationFrame(() => recalculatePlayerPositions());
         }
 
         // === 新增：計分板相關函數 ===
