@@ -57,10 +57,13 @@ Both tabs share one implementation: `setFullscreen(el, open)` toggles `.fullscre
 
 Tactical board dots/shuttlecock use `touch-action: none` and an enlarged `::after` hit area so dragging doesn't scroll the page. In fullscreen, `.formation-bar` is exempt from the `touchmove` block so it can scroll sideways.
 
+Tactical fullscreen layout: `#tacticalControls` becomes an absolutely positioned top bar sharing the row with ✕ (icon-only — button text lives in `.tc-label`, hidden in fullscreen); only the formation bar sits below the court. The court height is `100dvh - 140px` (minus safe areas); if you add rows above/below the court in fullscreen, adjust that number. While drawing in fullscreen, 🔄 重置 is hidden to make room for the color swatches.
+
 ### 🏸 戰術板 — 箭頭與站位
 
-- **Positions** (`currentPositions`) and **arrows** (`arrows = [{ x1, y1, x2, y2 }]`) are both stored as **percentages** of the court, so they survive resizing/fullscreen. `recalculatePlayerPositions()` re-places dots and calls `renderArrows()`, which redraws the `#arrowLayer` SVG in pixel coordinates.
+- **Positions** (`currentPositions`) and **arrows** (`arrows = [{ x1, y1, x2, y2, color }]`) are both stored as **percentages** of the court, so they survive resizing/fullscreen. `recalculatePlayerPositions()` re-places dots and calls `renderArrows()`, which redraws the `#arrowLayer` SVG in pixel coordinates.
 - **Drawing:** `toggleDrawMode()` turns on drawing (`.drawing` on the court). `initArrowDrawing()` handles mouse/touch; a press on a dot or the shuttlecock still drags it instead of drawing, and lines under 15px are discarded as accidental taps.
+- **Colors:** `ARROW_COLORS` (yellow / red / white / blue); the swatches (`#arrowColors`, built by `renderArrowColors()`) only show while drawing (`.drawing` on `#tacticalControls`). New arrows take the current `arrowColor`; arrows without `color` (older saved formations) render yellow. `renderArrows()` creates one SVG `<marker>` per color in use so arrowheads match their line.
 - **Formations:** `PRESET_FORMATIONS` are built in (預設 / 進攻・前後站 / 防守・左右站). User-saved ones (positions + arrows) live in `localStorage` under `tacticalFormations`, so they are per-device, not shared. `renderFormationBar()` builds chips with DOM APIs (`textContent`), so user-typed names are never injected as HTML.
 
 ### 📋 通知產生器 — 時段與球員
