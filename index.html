@@ -593,10 +593,11 @@
         .tactical-board.fullscreen .court-container {
             width: auto;
             max-width: none;
-            /* 依畫面高度縮放，同時不超出寬度（球場比例 1:2.2） */
-            height: min(calc(100vh - 205px), calc((100vw - 24px) * 2.2));
-            height: min(calc(100dvh - 205px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), calc((100vw - 24px) * 2.2));
-            margin-bottom: 12px;
+            /* 依畫面高度縮放，同時不超出寬度（球場比例 1:2.2）
+               扣掉：頂端按鈕列 68px + 底部站位列與留白約 72px */
+            height: min(calc(100vh - 140px), calc((100vw - 24px) * 2.2));
+            height: min(calc(100dvh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), calc((100vw - 24px) * 2.2));
+            margin-bottom: 0;
         }
 
         .fullscreen .fs-open-btn {
@@ -2041,7 +2042,7 @@
             cursor: crosshair;
             box-shadow: 0 0 0 3px #FFEB3B, 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-        .tactical-controls button {
+        .tactical-controls button:not(.arrow-color) {
             padding: 10px 14px;
             font-size: 14px;
         }
@@ -2096,8 +2097,47 @@
             padding-bottom: 2px;
         }
         .tactical-board.fullscreen .formation-chip { background: rgba(255, 255, 255, 0.95); }
-        .tactical-board.fullscreen .tactical-controls { flex-wrap: nowrap; gap: 8px; }
-        .tactical-board.fullscreen .tactical-controls button { padding: 9px 10px; }
+        /* 箭頭顏色：只在畫箭頭模式出現 */
+        .arrow-colors { display: none; gap: 6px; align-items: center; }
+        .tactical-controls.drawing .arrow-colors { display: inline-flex; }
+        .arrow-color {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.25);
+            padding: 0;
+            cursor: pointer;
+        }
+        .arrow-color.selected {
+            border: 3px solid #333;
+            box-shadow: 0 0 0 2px white;
+            transform: scale(1.1);
+        }
+
+        /* 全螢幕：按鈕列移到頂端，和 ✕ 同一排，只顯示圖示 */
+        .tactical-board.fullscreen .tactical-controls {
+            position: absolute;
+            top: max(12px, env(safe-area-inset-top));
+            left: 12px;
+            right: 72px;
+            height: 48px;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 6px;
+        }
+        .tactical-board.fullscreen .tc-label { display: none; }
+        .tactical-board.fullscreen .tactical-controls button:not(.arrow-color) {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .tactical-board.fullscreen .arrow-color { flex-shrink: 0; }
+        .tactical-board.fullscreen .arrow-color.selected { border-color: white; box-shadow: none; }
+        /* 畫箭頭時頂端要放顏色，先把重置收起來 */
+        .tactical-board.fullscreen .tactical-controls.drawing .reset-btn { display: none; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -2272,11 +2312,13 @@
                     <div class="shuttlecock" id="shuttlecock" data-player="shuttlecock"> </div>
                 </div>
 
-                <div class="tactical-controls">
-                    <button class="tc-btn" id="drawModeBtn" onclick="toggleDrawMode()">✏️ 畫箭頭</button>
-                    <button class="tc-btn" onclick="undoArrow()">↩️ 復原</button>
-                    <button class="tc-btn" onclick="clearArrows()">🧽 清除</button>
-                    <button class="reset-btn" onclick="resetPlayerPositions()">🔄 重置</button>
+                <!-- 全螢幕時這排會移到畫面頂端、只顯示圖示 -->
+                <div class="tactical-controls" id="tacticalControls">
+                    <button class="tc-btn" id="drawModeBtn" onclick="toggleDrawMode()"><span id="drawModeIcon">✏️</span><span class="tc-label" id="drawModeLabel"> 畫箭頭</span></button>
+                    <span class="arrow-colors" id="arrowColors"></span>
+                    <button class="tc-btn" onclick="undoArrow()" title="復原">↩️<span class="tc-label"> 復原</span></button>
+                    <button class="tc-btn" onclick="clearArrows()" title="清除箭頭">🧽<span class="tc-label"> 清除</span></button>
+                    <button class="reset-btn" onclick="resetPlayerPositions()" title="重置位置">🔄<span class="tc-label"> 重置</span></button>
                     <button class="fs-open-btn" onclick="toggleTacticalFullscreen(true)">⛶ 全螢幕</button>
                 </div>
 
@@ -3208,6 +3250,7 @@
             document.addEventListener('touchcancel', touchEnd);
 
             initArrowDrawing();
+            renderArrowColors();
             renderFormationBar();
 
             // 初始化位置
@@ -3353,23 +3396,49 @@
         let arrows = []; // [{ x1, y1, x2, y2 }]
         let drawMode = false;
 
+        // 箭頭顏色：黃、紅、白、藍（舊的箭頭沒有 color，視為黃色）
+        const ARROW_COLORS = ['#FFEB3B', '#FF5252', '#FFFFFF', '#40C4FF'];
+        let arrowColor = ARROW_COLORS[0];
+
         function renderArrows(preview = null) {
             const svg = document.getElementById('arrowLayer');
             const { width: w, height: h } = svg.getBoundingClientRect();
-            const toLine = (a, extra = '') =>
-                `<line x1="${a.x1 / 100 * w}" y1="${a.y1 / 100 * h}" x2="${a.x2 / 100 * w}" y2="${a.y2 / 100 * h}" ` +
-                `stroke="#FFEB3B" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowHead)"${extra}/>`;
+            const all = preview ? [...arrows, preview] : arrows;
+            // 箭頭尖端（marker）的顏色要跟線一樣，所以每種顏色各做一個
+            const colors = [...new Set(all.map(a => a.color || ARROW_COLORS[0]))];
+            const toLine = (a, extra = '') => {
+                const c = a.color || ARROW_COLORS[0];
+                return `<line x1="${a.x1 / 100 * w}" y1="${a.y1 / 100 * h}" x2="${a.x2 / 100 * w}" y2="${a.y2 / 100 * h}" ` +
+                    `stroke="${c}" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowHead${colors.indexOf(c)})"${extra}/>`;
+            };
             svg.innerHTML =
-                '<defs><marker id="arrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">' +
-                '<path d="M0,0 L10,5 L0,10 z" fill="#FFEB3B"/></marker></defs>' +
+                '<defs>' + colors.map((c, i) =>
+                    `<marker id="arrowHead${i}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">` +
+                    `<path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('') + '</defs>' +
                 arrows.map(a => toLine(a)).join('') +
                 (preview ? toLine(preview, ' opacity="0.6"') : '');
+        }
+
+        function renderArrowColors() {
+            const wrap = document.getElementById('arrowColors');
+            wrap.innerHTML = '';
+            ARROW_COLORS.forEach(c => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'arrow-color' + (c === arrowColor ? ' selected' : '');
+                btn.style.background = c;
+                btn.title = '箭頭顏色';
+                btn.onclick = () => { arrowColor = c; renderArrowColors(); };
+                wrap.appendChild(btn);
+            });
         }
 
         function toggleDrawMode() {
             drawMode = !drawMode;
             document.getElementById('drawModeBtn').classList.toggle('active', drawMode);
-            document.getElementById('drawModeBtn').textContent = drawMode ? '✋ 完成' : '✏️ 畫箭頭';
+            document.getElementById('drawModeIcon').textContent = drawMode ? '✋' : '✏️';
+            document.getElementById('drawModeLabel').textContent = drawMode ? ' 完成' : ' 畫箭頭';
+            document.getElementById('tacticalControls').classList.toggle('drawing', drawMode);
             document.getElementById('courtContainer').classList.toggle('drawing', drawMode);
         }
 
@@ -3403,14 +3472,14 @@
             const move = (clientX, clientY) => {
                 if (!start) return;
                 const p = toPct(clientX, clientY);
-                renderArrows({ x1: start.x, y1: start.y, x2: p.x, y2: p.y });
+                renderArrows({ x1: start.x, y1: start.y, x2: p.x, y2: p.y, color: arrowColor });
             };
             const end = (clientX, clientY) => {
                 if (!start) return;
                 const p = toPct(clientX, clientY);
                 const r = court.getBoundingClientRect();
                 const lengthPx = Math.hypot((p.x - start.x) / 100 * r.width, (p.y - start.y) / 100 * r.height);
-                if (lengthPx > 15) arrows.push({ x1: start.x, y1: start.y, x2: p.x, y2: p.y }); // 太短當成誤觸
+                if (lengthPx > 15) arrows.push({ x1: start.x, y1: start.y, x2: p.x, y2: p.y, color: arrowColor }); // 太短當成誤觸
                 start = null;
                 renderArrows();
             };
