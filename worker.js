@@ -13,8 +13,23 @@ function corsHeaders(origin) {
     return {
         'Access-Control-Allow-Origin': origin || '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Club-Password',
     };
+}
+
+// 寫入類 API（新增/修改/刪除）需要社團密碼。
+// 密碼存在 Cloudflare Worker 的 Secret「CLUB_PASSWORD」，目前是前端驗證問題「團主是誰？」的正確選項（答案不要寫進程式碼）；前端用 encodeURIComponent 編碼後放在 X-Club-Password header（header 不能直接放中文）。
+// /login 是健身房會員登入，不需要社團密碼。
+function checkClubPassword(request, env, url, origin) {
+    const isWrite = ['POST', 'PUT', 'DELETE'].includes(request.method) && url.pathname !== '/login';
+    if (!isWrite) return null;
+    if (!env.CLUB_PASSWORD) {
+        return jsonResp({ success: false, error: '伺服器尚未設定社團密碼 (CLUB_PASSWORD)' }, origin, 500);
+    }
+    if (request.headers.get('X-Club-Password') !== encodeURIComponent(env.CLUB_PASSWORD)) {
+        return jsonResp({ success: false, error: '社團密碼錯誤', authRequired: true }, origin, 401);
+    }
+    return null;
 }
 
 function jsonResp(data, origin, status = 200) {
@@ -50,6 +65,8 @@ export default {
         if (request.method === 'OPTIONS') {
             return new Response(null, { status: 204, headers: corsHeaders(origin) });
         }
+        const authError = checkClubPassword(request, env, url, origin);
+        if (authError) return authError;
         try {
             if (url.pathname === '/captcha') return await handleCaptcha(origin);
             if (url.pathname === '/login' && request.method === 'POST') return await handleLogin(await request.json(), origin);

@@ -594,8 +594,8 @@
             width: auto;
             max-width: none;
             /* 依畫面高度縮放，同時不超出寬度（球場比例 1:2.2） */
-            height: min(calc(100vh - 160px), calc((100vw - 24px) * 2.2));
-            height: min(calc(100dvh - 160px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), calc((100vw - 24px) * 2.2));
+            height: min(calc(100vh - 205px), calc((100vw - 24px) * 2.2));
+            height: min(calc(100dvh - 205px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), calc((100vw - 24px) * 2.2));
             margin-bottom: 12px;
         }
 
@@ -1962,6 +1962,142 @@
             .bi-chart-wrap { padding: 10px; }
             .bi-chart-wrap canvas { height: 300px !important; }
         }
+
+        /* === 共用輸入對話框（社團密碼、站位命名） === */
+        .ask-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .ask-overlay.open { display: flex; }
+        .ask-box {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .ask-title { font-size: 17px; font-weight: bold; color: #333; margin-bottom: 6px; }
+        .ask-message { font-size: 13px; color: #666; margin-bottom: 12px; min-height: 1em; }
+        .ask-message.error { color: #e74c3c; font-weight: bold; }
+        .ask-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .ask-input:focus { outline: none; border-color: #667eea; }
+        .ask-choices {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .ask-choices:empty { display: none; }
+        .ask-choices button {
+            padding: 12px 4px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            background: white;
+            color: #4a5bc4;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .ask-choices button:active { background: #667eea; color: white; }
+        .ask-box.choice-mode .ask-input,
+        .ask-box.choice-mode .ask-ok { display: none; }
+        .ask-actions { display: flex; gap: 10px; margin-top: 14px; }
+        .ask-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .ask-cancel { background: #eee; color: #555; }
+        .ask-ok { background: #667eea; color: white; }
+
+        /* === 戰術板：箭頭與站位 === */
+        .arrow-layer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .court-container.drawing {
+            touch-action: none;
+            cursor: crosshair;
+            box-shadow: 0 0 0 3px #FFEB3B, 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .tactical-controls button {
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+        .tc-btn {
+            background: #546E7A;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .tc-btn.active { background: #FBC02D; color: #333; }
+        .formation-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+            max-width: 500px;
+        }
+        .formation-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            border: 2px solid #4CAF50;
+            background: white;
+            color: #2E7D32;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .formation-chip.saved { border-color: #667eea; color: #4a5bc4; }
+        .formation-chip.add { border-style: dashed; border-color: #999; color: #666; }
+        .formation-chip .fc-del {
+            border: none;
+            background: none;
+            color: #999;
+            font-size: 14px;
+            padding: 0 0 0 2px;
+            cursor: pointer;
+        }
+        .tactical-board.fullscreen .formation-bar {
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            overflow-x: auto;
+            max-width: 100%;
+            touch-action: pan-x;
+            margin-top: 8px;
+            padding-bottom: 2px;
+        }
+        .tactical-board.fullscreen .formation-chip { background: rgba(255, 255, 255, 0.95); }
+        .tactical-board.fullscreen .tactical-controls { flex-wrap: nowrap; gap: 8px; }
+        .tactical-board.fullscreen .tactical-controls button { padding: 9px 10px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -2123,6 +2259,9 @@
                         <line x1="10" y1="220" x2="190" y2="220" class="court-net" />
                     </svg>
 
+                    <!-- 箭頭圖層（畫跑動路線） -->
+                    <svg class="arrow-layer" id="arrowLayer"></svg>
+
                     <!-- 球員圓點 -->
                     <div class="player-dot player1" id="player1" data-player="1">1</div>
                     <div class="player-dot player2" id="player2" data-player="2">2</div>
@@ -2134,9 +2273,15 @@
                 </div>
 
                 <div class="tactical-controls">
-                    <button class="reset-btn" onclick="resetPlayerPositions()">🔄 重置位置</button>
+                    <button class="tc-btn" id="drawModeBtn" onclick="toggleDrawMode()">✏️ 畫箭頭</button>
+                    <button class="tc-btn" onclick="undoArrow()">↩️ 復原</button>
+                    <button class="tc-btn" onclick="clearArrows()">🧽 清除</button>
+                    <button class="reset-btn" onclick="resetPlayerPositions()">🔄 重置</button>
                     <button class="fs-open-btn" onclick="toggleTacticalFullscreen(true)">⛶ 全螢幕</button>
                 </div>
+
+                <!-- 站位：內建 + 自己存的（存在這台裝置） -->
+                <div class="formation-bar" id="formationBar"></div>
             </div>
         </div>
 
@@ -2454,6 +2599,20 @@
         </div>
     </div>
 
+    <!-- 共用輸入對話框（社團密碼、站位命名） -->
+    <div class="ask-overlay" id="askOverlay">
+        <form class="ask-box" id="askForm">
+            <div class="ask-title" id="askTitle"></div>
+            <div class="ask-message" id="askMessage"></div>
+            <input class="ask-input" id="askInput" autocomplete="off">
+            <div class="ask-choices" id="askChoices"></div>
+            <div class="ask-actions">
+                <button type="button" class="ask-cancel" id="askCancel">取消</button>
+                <button type="submit" class="ask-ok">確定</button>
+            </div>
+        </form>
+    </div>
+
     <script>
         // 全域變數
         const times = ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30"];
@@ -2683,7 +2842,7 @@
 
         async function deleteBanRecord(id) {
             if (!confirm('確定刪除此禁用紀錄？')) return;
-            await fetch(`${WORKER_URL}/ban-records/${id}`, { method: 'DELETE' });
+            await apiWrite(`/ban-records/${id}`, { method: 'DELETE' });
             renderBanList();
         }
 
@@ -2693,7 +2852,7 @@
             if (!sel.value || !banDateInput.value) { alert('請選擇人員並輸入禁用日期'); return; }
             const avail = new Date(banDateInput.value + 'T00:00:00');
             avail.setDate(avail.getDate() + 8);
-            await fetch(`${WORKER_URL}/ban-records`, {
+            await apiWrite(`/ban-records`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2819,6 +2978,96 @@
         // === 會員查詢相關函數 ===
         const WORKER_URL = 'https://gym-query.linlinlailai.workers.dev';
         let currentSessionId = null;
+
+        // === 共用輸入對話框：回傳輸入的文字（或選到的選項），按取消回傳 null ===
+        // 傳入 choices 時改成選擇題：點選項就直接回傳，不顯示輸入框
+        function askText({ title, message = '', placeholder = '', type = 'text', isError = false, choices = null }) {
+            return new Promise(resolve => {
+                const overlay = document.getElementById('askOverlay');
+                const form = document.getElementById('askForm');
+                const input = document.getElementById('askInput');
+                const msg = document.getElementById('askMessage');
+                const choicesDiv = document.getElementById('askChoices');
+                document.getElementById('askTitle').textContent = title;
+                msg.textContent = message;
+                msg.classList.toggle('error', isError);
+                input.type = type;
+                input.placeholder = placeholder;
+                input.value = '';
+                form.classList.toggle('choice-mode', !!choices);
+                choicesDiv.innerHTML = '';
+                (choices || []).forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = c;
+                    btn.onclick = () => finish(c);
+                    choicesDiv.appendChild(btn);
+                });
+                overlay.classList.add('open');
+                if (!choices) setTimeout(() => input.focus(), 50);
+
+                const finish = (value) => {
+                    overlay.classList.remove('open');
+                    form.onsubmit = null;
+                    document.getElementById('askCancel').onclick = null;
+                    resolve(value);
+                };
+                form.onsubmit = (e) => {
+                    e.preventDefault();
+                    const v = input.value.trim();
+                    if (v) finish(v);
+                };
+                document.getElementById('askCancel').onclick = () => finish(null);
+            });
+        }
+
+        // === 寫入後端（新增/修改/刪除）：自動帶上社團密碼 ===
+        // 「密碼」是驗證問題的答案：網頁只放題目和選項，正確答案只存在 Worker 的 CLUB_PASSWORD Secret。
+        // 答案只存在這台裝置；沒有或答錯時會跳出題目請使用者作答。
+        // 使用者取消時回傳 { success:false } 的 Response，讓原本的錯誤處理照常運作。
+        const CLUB_PW_KEY = 'clubPassword';
+        const CLUB_QUESTION = '團主是誰？';
+        const CLUB_CHOICES = ['庭宇', '丹尼斯', '韋伶', '奧斯卡', '友志', '顯德'];
+
+        function getClubPassword() {
+            try { return localStorage.getItem(CLUB_PW_KEY); } catch { return null; }
+        }
+
+        function setClubPassword(pw) {
+            try {
+                if (pw) localStorage.setItem(CLUB_PW_KEY, pw);
+                else localStorage.removeItem(CLUB_PW_KEY);
+            } catch { /* 無痕模式等情況無法儲存，下次再問 */ }
+        }
+
+        async function apiWrite(path, options = {}) {
+            let pw = getClubPassword();
+            let wrongPw = false;
+            while (true) {
+                if (!pw) {
+                    pw = await askText({
+                        title: '🔒 ' + CLUB_QUESTION,
+                        message: wrongPw ? '答錯了，請再選一次' : '新增、修改、刪除資料前要先答對（只需答一次）',
+                        isError: wrongPw,
+                        choices: CLUB_CHOICES,
+                    });
+                    if (!pw) {
+                        return new Response(JSON.stringify({ success: false, error: '未通過驗證問題' }), { status: 401 });
+                    }
+                }
+                const resp = await fetch(`${WORKER_URL}${path}`, {
+                    ...options,
+                    headers: { ...(options.headers || {}), 'X-Club-Password': encodeURIComponent(pw) },
+                });
+                if (resp.status !== 401) {
+                    setClubPassword(pw);
+                    return resp;
+                }
+                setClubPassword(null);
+                pw = null;
+                wrongPw = true;
+            }
+        }
 
         function initMembershipTab() {
             const select = document.getElementById('memberSelect');
@@ -2958,6 +3207,9 @@
             document.addEventListener('touchend', touchEnd);
             document.addEventListener('touchcancel', touchEnd);
 
+            initArrowDrawing();
+            renderFormationBar();
+
             // 初始化位置
             setTimeout(() => {
                 resetPlayerPositions();
@@ -3086,11 +3338,188 @@
                 dot.style.left = Math.max(0, Math.min(x, rect.width - dot.offsetWidth)) + 'px';
                 dot.style.top = Math.max(0, Math.min(y, rect.height - dot.offsetHeight)) + 'px';
             });
+
+            // 箭頭用像素座標畫，球場尺寸改變時要跟著重畫
+            renderArrows();
         }
 
         function resetPlayerPositions() {
             currentPositions = JSON.parse(JSON.stringify(initialPositions));
             recalculatePlayerPositions();
+        }
+
+        // === 戰術板：畫箭頭（跑動路線） ===
+        // 座標跟圓點一樣存百分比，換尺寸/全螢幕時不會跑掉
+        let arrows = []; // [{ x1, y1, x2, y2 }]
+        let drawMode = false;
+
+        function renderArrows(preview = null) {
+            const svg = document.getElementById('arrowLayer');
+            const { width: w, height: h } = svg.getBoundingClientRect();
+            const toLine = (a, extra = '') =>
+                `<line x1="${a.x1 / 100 * w}" y1="${a.y1 / 100 * h}" x2="${a.x2 / 100 * w}" y2="${a.y2 / 100 * h}" ` +
+                `stroke="#FFEB3B" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowHead)"${extra}/>`;
+            svg.innerHTML =
+                '<defs><marker id="arrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">' +
+                '<path d="M0,0 L10,5 L0,10 z" fill="#FFEB3B"/></marker></defs>' +
+                arrows.map(a => toLine(a)).join('') +
+                (preview ? toLine(preview, ' opacity="0.6"') : '');
+        }
+
+        function toggleDrawMode() {
+            drawMode = !drawMode;
+            document.getElementById('drawModeBtn').classList.toggle('active', drawMode);
+            document.getElementById('drawModeBtn').textContent = drawMode ? '✋ 完成' : '✏️ 畫箭頭';
+            document.getElementById('courtContainer').classList.toggle('drawing', drawMode);
+        }
+
+        function undoArrow() {
+            arrows.pop();
+            renderArrows();
+        }
+
+        function clearArrows() {
+            arrows = [];
+            renderArrows();
+        }
+
+        function initArrowDrawing() {
+            const court = document.getElementById('courtContainer');
+            let start = null;
+            let touchId = null;
+
+            const toPct = (clientX, clientY) => {
+                const r = court.getBoundingClientRect();
+                const clamp = v => Math.max(0, Math.min(100, v));
+                return { x: clamp((clientX - r.left) / r.width * 100), y: clamp((clientY - r.top) / r.height * 100) };
+            };
+            // 按在圓點/羽球上時是拖曳，不是畫線
+            const begin = (clientX, clientY, e) => {
+                if (!drawMode || e.target.closest('.player-dot, .shuttlecock')) return false;
+                e.preventDefault();
+                start = toPct(clientX, clientY);
+                return true;
+            };
+            const move = (clientX, clientY) => {
+                if (!start) return;
+                const p = toPct(clientX, clientY);
+                renderArrows({ x1: start.x, y1: start.y, x2: p.x, y2: p.y });
+            };
+            const end = (clientX, clientY) => {
+                if (!start) return;
+                const p = toPct(clientX, clientY);
+                const r = court.getBoundingClientRect();
+                const lengthPx = Math.hypot((p.x - start.x) / 100 * r.width, (p.y - start.y) / 100 * r.height);
+                if (lengthPx > 15) arrows.push({ x1: start.x, y1: start.y, x2: p.x, y2: p.y }); // 太短當成誤觸
+                start = null;
+                renderArrows();
+            };
+
+            court.addEventListener('mousedown', e => begin(e.clientX, e.clientY, e));
+            document.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+            document.addEventListener('mouseup', e => end(e.clientX, e.clientY));
+
+            const findTouch = e => [...e.changedTouches].find(t => t.identifier === touchId);
+            court.addEventListener('touchstart', e => {
+                if (touchId !== null) return;
+                const t = e.changedTouches[0];
+                if (begin(t.clientX, t.clientY, e)) touchId = t.identifier;
+            }, { passive: false });
+            document.addEventListener('touchmove', e => {
+                const t = findTouch(e);
+                if (!t) return;
+                e.preventDefault();
+                move(t.clientX, t.clientY);
+            }, { passive: false });
+            document.addEventListener('touchend', e => {
+                const t = findTouch(e);
+                if (!t) return;
+                end(t.clientX, t.clientY);
+                touchId = null;
+            });
+            document.addEventListener('touchcancel', e => {
+                if (!findTouch(e)) return;
+                start = null;
+                touchId = null;
+                renderArrows();
+            });
+        }
+
+        // === 戰術板：站位 ===
+        // 內建站位固定在程式裡；自己存的放在這台裝置的 localStorage（含箭頭）
+        const PRESET_FORMATIONS = [
+            { name: '預設', positions: initialPositions },
+            {
+                name: '進攻・前後站', positions: {
+                    player1: { x: 50, y: 64 }, player2: { x: 50, y: 86 },
+                    player3: { x: 30, y: 22 }, player4: { x: 70, y: 22 },
+                    shuttlecock: { x: 50, y: 40 }
+                }
+            },
+            {
+                name: '防守・左右站', positions: {
+                    player1: { x: 30, y: 78 }, player2: { x: 70, y: 78 },
+                    player3: { x: 50, y: 36 }, player4: { x: 50, y: 14 },
+                    shuttlecock: { x: 50, y: 60 }
+                }
+            },
+        ];
+        const FORMATION_KEY = 'tacticalFormations';
+
+        function loadSavedFormations() {
+            try { return JSON.parse(localStorage.getItem(FORMATION_KEY)) || []; } catch { return []; }
+        }
+
+        function storeSavedFormations(list) {
+            try { localStorage.setItem(FORMATION_KEY, JSON.stringify(list)); } catch { alert('這個瀏覽器無法儲存站位（可能是無痕模式）'); }
+        }
+
+        function applyFormation(f) {
+            currentPositions = JSON.parse(JSON.stringify({ ...initialPositions, ...f.positions }));
+            arrows = JSON.parse(JSON.stringify(f.arrows || []));
+            recalculatePlayerPositions();
+        }
+
+        async function saveCurrentFormation() {
+            const name = await askText({ title: '💾 儲存目前站位', message: '箭頭會一起儲存，同名會覆蓋', placeholder: '例如：發球後第三拍' });
+            if (!name) return;
+            const list = loadSavedFormations();
+            const entry = { name, positions: JSON.parse(JSON.stringify(currentPositions)), arrows: JSON.parse(JSON.stringify(arrows)) };
+            const i = list.findIndex(f => f.name === name);
+            if (i >= 0) list[i] = entry; else list.push(entry);
+            storeSavedFormations(list);
+            renderFormationBar();
+        }
+
+        function deleteFormation(name) {
+            if (!confirm(`刪除站位「${name}」？`)) return;
+            storeSavedFormations(loadSavedFormations().filter(f => f.name !== name));
+            renderFormationBar();
+        }
+
+        function renderFormationBar() {
+            const bar = document.getElementById('formationBar');
+            bar.innerHTML = '';
+            const addChip = (label, className, onClick) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'formation-chip ' + className;
+                chip.textContent = label;
+                chip.onclick = onClick;
+                bar.appendChild(chip);
+                return chip;
+            };
+            PRESET_FORMATIONS.forEach(f => addChip(f.name, '', () => applyFormation(f)));
+            loadSavedFormations().forEach(f => {
+                const chip = addChip(f.name, 'saved', () => applyFormation(f));
+                const del = document.createElement('span');
+                del.className = 'fc-del';
+                del.textContent = '✕';
+                del.title = '刪除';
+                del.onclick = (e) => { e.stopPropagation(); deleteFormation(f.name); };
+                chip.appendChild(del);
+            });
+            addChip('＋ 存目前站位', 'add', saveCurrentFormation);
         }
 
         // === 全螢幕（戰術板、計分板共用）：滿版顯示並鎖住背後頁面的捲動 ===
@@ -3127,8 +3556,11 @@
 
         function initFullscreen() {
             // 全螢幕時擋掉整個畫面的滑動（iOS Safari 只靠 overflow:hidden 鎖不住）
+            // 站位列例外：要能左右滑動
             document.addEventListener('touchmove', (e) => {
-                if (e.target.closest && e.target.closest('.fullscreen')) e.preventDefault();
+                if (!e.target.closest || !e.target.closest('.fullscreen')) return;
+                if (e.target.closest('.formation-bar')) return;
+                e.preventDefault();
             }, { passive: false });
 
             document.addEventListener('keydown', (e) => {
@@ -3411,7 +3843,7 @@
             btn.textContent = '新增中...';
 
             try {
-                const resp = await fetch(`${WORKER_URL}/ball-purchases`, {
+                const resp = await apiWrite(`/ball-purchases`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ buyer, brand, qty, amount, date, note })
@@ -3438,7 +3870,7 @@
         async function deleteBallPurchase(id) {
             if (!confirm('確定要刪除這筆記錄嗎？')) return;
             try {
-                const resp = await fetch(`${WORKER_URL}/ball-purchases/${id}`, { method: 'DELETE' });
+                const resp = await apiWrite(`/ball-purchases/${id}`, { method: 'DELETE' });
                 const data = await resp.json();
                 if (data.success) {
                     await loadBallPurchases();
@@ -3748,7 +4180,7 @@
         // silent=true 時不顯示成功 toast（拖曳自動儲存用）
         async function saveTiers(silent = false) {
             try {
-                const resp = await fetch(`${WORKER_URL}/frequency-tiers`, {
+                const resp = await apiWrite(`/frequency-tiers`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(tierData)
@@ -3795,7 +4227,7 @@
         }
         async function savePaymentStatus() {
             try {
-                await fetch(`${WORKER_URL}/payment-status`, {
+                await apiWrite(`/payment-status`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(paymentStatus)
@@ -4031,7 +4463,7 @@
             const btn = document.getElementById('bi-add-btn');
             btn.disabled = true; btn.textContent = '新增中...';
             try {
-                const resp = await fetch(`${WORKER_URL}/ball-inventory/purchase`, {
+                const resp = await apiWrite(`/ball-inventory/purchase`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ date, totalTubes, totalCost, buyer, note, distributions }),
@@ -4060,7 +4492,7 @@
         async function deleteBiPurchase(id) {
             if (!confirm('確定要刪除這筆進貨紀錄？相關的庫存紀錄也會一併刪除。')) return;
             try {
-                const resp = await fetch(`${WORKER_URL}/ball-inventory/purchase/${id}`, { method: 'DELETE' });
+                const resp = await apiWrite(`/ball-inventory/purchase/${id}`, { method: 'DELETE' });
                 const data = await resp.json();
                 if (data.success) await loadBallInventory();
                 else alert('刪除失敗：' + data.error);
@@ -4190,7 +4622,7 @@
             });
 
             try {
-                const resp = await fetch(`${WORKER_URL}/ball-inventory/purchase/${id}`, {
+                const resp = await apiWrite(`/ball-inventory/purchase/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ date, totalTubes, totalCost, buyer, note, distributions }),
@@ -4293,7 +4725,7 @@
             if (isNaN(remaining) || remaining < 0) { alert('請輸入有效數字'); return; }
             if (remaining > maxVal) { alert(`不能超過分配總數 ${maxVal} 桶`); return; }
             try {
-                const resp = await fetch(`${WORKER_URL}/ball-inventory/update-stock`, {
+                const resp = await apiWrite(`/ball-inventory/update-stock`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ player: biUpdatePlayer, remaining }),
@@ -4472,7 +4904,7 @@
             btn.disabled = true;
             btn.textContent = '新增中...';
             try {
-                const resp = await fetch(`${WORKER_URL}/public-account`, {
+                const resp = await apiWrite(`/public-account`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ date, type: paSelectedType, description, amount: Number(amount), note }),
@@ -4497,7 +4929,7 @@
         async function deletePublicAccountRecord(id) {
             if (!confirm('確定要刪除這筆記錄？')) return;
             try {
-                const resp = await fetch(`${WORKER_URL}/public-account/${id}`, { method: 'DELETE' });
+                const resp = await apiWrite(`/public-account/${id}`, { method: 'DELETE' });
                 const data = await resp.json();
                 if (data.success) {
                     loadPublicAccount();
