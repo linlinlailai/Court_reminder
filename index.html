@@ -587,8 +587,8 @@
             display: none;
         }
 
-        /* 戰術板全螢幕模式 */
-        body.tactical-fs-open {
+        /* 全螢幕模式（戰術板、計分板共用） */
+        body.fs-open {
             overflow: hidden;
         }
 
@@ -620,11 +620,11 @@
             margin-bottom: 12px;
         }
 
-        .tactical-board.fullscreen .fs-open-btn {
+        .fullscreen .fs-open-btn {
             display: none;
         }
 
-        .tactical-board.fullscreen .fs-close-btn {
+        .fullscreen > .fs-close-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -642,6 +642,34 @@
             cursor: pointer;
             z-index: 30;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 計分板全螢幕 */
+        #scoreboard-page.fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            height: auto;
+            border-radius: 0;
+            padding: 12px;
+            padding-top: max(12px, env(safe-area-inset-top));
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        #scoreboard-page.fullscreen .scoreboard-controls {
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        #scoreboard-page.fullscreen .scoreboard-btn {
+            flex: 1;
+            padding: 14px 8px;
+        }
+
+        .fullscreen .sb-fs-btn {
+            display: none;
         }
 
         .tactical-info {
@@ -1050,6 +1078,27 @@
             .tab-icon {
                 display: block;
                 font-size: 20px;
+            }
+
+            /* 往下捲動後：縮成一排超薄的 emoji 列 */
+            .tabs.compact {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 4px;
+                padding: 3px 0;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            }
+
+            .tabs.compact .tab {
+                padding: 2px 0;
+                border-radius: 8px;
+            }
+
+            .tabs.compact .tab-label {
+                display: none;
+            }
+
+            .tabs.compact .tab-icon {
+                font-size: 17px;
             }
 
             .court-container {
@@ -2101,6 +2150,7 @@
         <!-- 新增：計分板內容 -->
         <div id="scoreboard" class="tab-content">
             <div id="scoreboard-page">
+                <button class="fs-close-btn" onclick="toggleScoreboardFullscreen(false)" aria-label="關閉全螢幕">✕</button>
                 <div class="game-status" id="game-status"></div>
                 <div class="scoreboard-header">
                     <div class="scoreboard-display">
@@ -2114,6 +2164,7 @@
                 <div class="scoreboard-controls">
                     <button id="swap-btn" class="scoreboard-btn">🔄 交換場地</button>
                     <button id="reset-score-btn" class="scoreboard-btn">🧹 重設分數</button>
+                    <button class="scoreboard-btn sb-fs-btn" onclick="toggleScoreboardFullscreen(true)">⛶ 全螢幕</button>
                 </div>
             </div>
         </div>
@@ -2422,7 +2473,7 @@
             { id: "CK17583蔡佳佑483", label: "佳佑 Arvin" },
             { id: "CK17671賴韋伶052", label: "韋伶 Lynn" },
             { id: "CK17711楊家榮791", label: "家榮 Barry" },
-            { id: "CK17824陳毅庭705", label: "毅庭 Eden" },
+            { id: "CK17824陳毅庭705", label: "毅庭 Eden", bench: true },
             { id: "CK17759陳冠勳033", label: "冠勳 Andersen" },
             { id: "CK17778包國宏063", label: "國宏 Luke" },
             { id: "CK17801劉庭宇161", label: "庭宇 Ben" },
@@ -2432,27 +2483,27 @@
             { id: "CK17718張富翔492", label: "富翔 Oscar" },
             { id: "CK17854嚴友志512", label: "友志 Jerry" },
             { id: "CS15024林瑋青552", label: "瑋青 David", bench: true },
-            { id: "CS15072陳煜瑋128", label: "煜瑋 Benson" },
-            { id: "CK17793方  煒218", label: "方煒 Tony" },
+            { id: "CS15072陳煜瑋128", label: "煜瑋 Benson", bench: true },
+            { id: "CK17793方  煒218", label: "方煒 Tony", bench: true },
             { id: "CK17863游振浩872", label: "振浩 Howard" },
             { id: "CK17795王冠翔436", label: "冠翔 Damien", bench: true },
             { id: "CK17812林杰凱808", label: "杰凱 Adam", bench: true },
-            { id: "CK17509曾宇溢406", label: "宇溢 Eugene", bench: true },
-            { id: "CK17630詹鈞貿628", label: "鈞貿 CM", bench: true },
-            { id: "CK17556白承偉687", label: "小白 Chuck", bench: true },
-            { id: "CK17657林楊凱196", label: "楊凱 Zack", bench: true },
+            { id: "CK17509曾宇溢406", label: "宇溢 Eugene" },
+            { id: "CK17630詹鈞貿628", label: "鈞貿 CM" },
+            { id: "CK17556白承偉687", label: "小白 Chuck" },
+            { id: "CK17657林楊凱196", label: "楊凱 Zack" },
             { id: "CK17815蔡佳宏079", label: "佳宏 Ian", bench: true },
             { id: "CK17724謝德慶104", label: "德慶 Lantis", bench: true },
             { id: "CK17835江嘉胤094", label: "嘉胤 John", bench: true },
             { id: "CF32054林宗翰314", label: "宗翰", bench: true },
-            { id: "CK17851林裕明322", label: "裕明 Eric" },
+            { id: "CK17851林裕明322", label: "裕明 Eric", bench: true },
             { id: "CS16015蕭豐坤207", label: "坤哥 Karl" },
-            { id: "CK17870吳定和504", label: "定和 River" },
+            { id: "CK17870吳定和504", label: "定和 River", bench: true },
             { id: "CK17523徐延慶825", label: "延慶 Jeffrey" },
-            { id: "CK17802郭玟慧236", label: "玟慧", bench: true },
-            { id: "CK17658林裕生734", label: "裕生 Victor", bench: true },
-            { id: "CK17631羅仁武170", label: "仁武 Nick", bench: true },
-            { id: "CK17030陳筱玲020", label: "筱玲 Zoe", bench: true }
+            { id: "CK17802郭玟慧236", label: "玟慧" },
+            { id: "CK17658林裕生734", label: "裕生 Victor" },
+            { id: "CK17631羅仁武170", label: "仁武 Nick" },
+            { id: "CK17030陳筱玲020", label: "筱玲 Zoe" }
         ];
 
         // 戰術板相關變數 - 多點觸控支援
@@ -2914,15 +2965,6 @@
             document.addEventListener('touchend', touchEnd);
             document.addEventListener('touchcancel', touchEnd);
 
-            // 全螢幕時擋掉整個畫面的滑動（iOS Safari 只靠 overflow:hidden 鎖不住）
-            const board = document.getElementById('tacticalBoard');
-            board.addEventListener('touchmove', (e) => {
-                if (board.classList.contains('fullscreen')) e.preventDefault();
-            }, { passive: false });
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && board.classList.contains('fullscreen')) toggleTacticalFullscreen(false);
-            });
-
             // 初始化位置
             setTimeout(() => {
                 resetPlayerPositions();
@@ -3058,13 +3100,57 @@
             recalculatePlayerPositions();
         }
 
-        // 戰術板全螢幕：滿版顯示並鎖住背後頁面的捲動
+        // === 全螢幕（戰術板、計分板共用）：滿版顯示並鎖住背後頁面的捲動 ===
+        function setFullscreen(el, open) {
+            el.classList.toggle('fullscreen', open);
+            document.body.classList.toggle('fs-open', open);
+        }
+
         function toggleTacticalFullscreen(open) {
-            const board = document.getElementById('tacticalBoard');
-            board.classList.toggle('fullscreen', open);
-            document.body.classList.toggle('tactical-fs-open', open);
+            setFullscreen(document.getElementById('tacticalBoard'), open);
             // 球場尺寸改變，依百分比重新擺放圓點
             requestAnimationFrame(() => recalculatePlayerPositions());
+        }
+
+        function toggleScoreboardFullscreen(open) {
+            setFullscreen(document.getElementById('scoreboard-page'), open);
+            setWakeLock(open);
+        }
+
+        // 計分板全螢幕時讓螢幕保持不關閉（瀏覽器不支援就略過）
+        let screenWakeLock = null;
+        async function setWakeLock(on) {
+            try {
+                if (on && 'wakeLock' in navigator) {
+                    screenWakeLock = await navigator.wakeLock.request('screen');
+                } else if (!on && screenWakeLock) {
+                    await screenWakeLock.release();
+                    screenWakeLock = null;
+                }
+            } catch (err) {
+                console.warn('Wake Lock 無法使用:', err);
+            }
+        }
+
+        function initFullscreen() {
+            // 全螢幕時擋掉整個畫面的滑動（iOS Safari 只靠 overflow:hidden 鎖不住）
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.closest && e.target.closest('.fullscreen')) e.preventDefault();
+            }, { passive: false });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+                if (document.getElementById('tacticalBoard').classList.contains('fullscreen')) toggleTacticalFullscreen(false);
+                if (document.getElementById('scoreboard-page').classList.contains('fullscreen')) toggleScoreboardFullscreen(false);
+            });
+
+            // 切到別的 App 再回來時，Wake Lock 會被系統釋放，要重新取得
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' &&
+                    document.getElementById('scoreboard-page').classList.contains('fullscreen')) {
+                    setWakeLock(true);
+                }
+            });
         }
 
         // === 新增：計分板相關函數 ===
@@ -4481,6 +4567,23 @@
         // === 公帳紀錄結束 ===
 
         // 分頁切換
+        // 手機往下捲動時把分頁列縮成一排只剩 emoji，捲回頂端再展開
+        // （縮小和展開用不同門檻，避免在臨界點來回閃動）
+        function initCompactTabs() {
+            const tabs = document.querySelector('.tabs');
+            let ticking = false;
+            window.addEventListener('scroll', () => {
+                if (ticking) return;
+                ticking = true;
+                requestAnimationFrame(() => {
+                    ticking = false;
+                    const y = window.scrollY;
+                    if (y > 160) tabs.classList.add('compact');
+                    else if (y < 40) tabs.classList.remove('compact');
+                });
+            }, { passive: true });
+        }
+
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -4514,6 +4617,8 @@
             updateSplitCalc(); // 預先渲染計算結果
             restoreGeneratorState(); // 還原當日通知產生器狀態
             initBanBlock();
+            initFullscreen();
+            initCompactTabs();
         });
 
         // 視窗大小改變時重新調整圓點位置
