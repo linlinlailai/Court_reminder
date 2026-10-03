@@ -20,6 +20,16 @@ The Worker is deployed separately via the Cloudflare dashboard (copy-paste into 
 - **Worker URL:** `https://gym-query.linlinlailai.workers.dev`
 - **Worker deployment:** Paste `worker.js` into the Cloudflare Workers web editor and click Deploy. No CLI tooling is configured.
 - **KV binding:** The Worker requires a KV namespace bound as `BALL_KV`.
+- **Secret:** The Worker requires a Secret named `CLUB_PASSWORD` (Settings → Variables and Secrets, type **Secret**, not KV). Its value is the correct answer to the frontend's verification question — never write the answer into the code or docs (the repo is public).
+- **Deploy order when an API/auth contract changes:** set secrets → deploy `worker.js` → push `index.html`. If the frontend goes live first, CORS preflight rejects the new header and every write fails.
+
+## Write Authentication
+
+All writes (POST/PUT/DELETE, except `/login`, which is the gym member login) go through `checkClubPassword()` in `worker.js`: the `X-Club-Password` header must equal `encodeURIComponent(env.CLUB_PASSWORD)` (URI-encoded because headers can't carry Chinese). Missing/wrong → `401 { authRequired: true }`; secret not set → `500`. GET requests are open.
+
+On the frontend, **every write must use `apiWrite(path, options)`, not raw `fetch`.** It attaches the header, and on a missing/wrong answer it asks the multiple-choice question `CLUB_QUESTION` ("團主是誰？") with options `CLUB_CHOICES` (via `askText({ choices })`), retries, and stores the accepted answer in `localStorage` (`clubPassword`). If the user cancels, it returns a `{ success: false }` Response so callers' existing error handling still works. Only 6 options means this deters casual edits, not a determined attacker.
+
+`askText({ title, message, placeholder, type, isError, choices })` is the shared modal (`#askOverlay`): a text input normally, or a grid of option buttons when `choices` is given. Resolves to the string, or `null` on cancel.
 
 ## Frontend Structure (index.html)
 
@@ -45,7 +55,13 @@ The page always opens on 📋 通知產生器 — the last-used tab is intention
 
 Both tabs share one implementation: `setFullscreen(el, open)` toggles `.fullscreen` on the element and `fs-open` on `<body>`. Wrappers are `toggleTacticalFullscreen()` (also re-places dots via `recalculatePlayerPositions()`) and `toggleScoreboardFullscreen()` (also holds a screen Wake Lock). `initFullscreen()` blocks `touchmove` inside `.fullscreen` (needed on iOS Safari) and closes on Esc. Each fullscreen element contains its own `.fs-close-btn` (✕).
 
-Tactical board dots/shuttlecock use `touch-action: none` and an enlarged `::after` hit area so dragging doesn't scroll the page.
+Tactical board dots/shuttlecock use `touch-action: none` and an enlarged `::after` hit area so dragging doesn't scroll the page. In fullscreen, `.formation-bar` is exempt from the `touchmove` block so it can scroll sideways.
+
+### 🏸 戰術板 — 箭頭與站位
+
+- **Positions** (`currentPositions`) and **arrows** (`arrows = [{ x1, y1, x2, y2 }]`) are both stored as **percentages** of the court, so they survive resizing/fullscreen. `recalculatePlayerPositions()` re-places dots and calls `renderArrows()`, which redraws the `#arrowLayer` SVG in pixel coordinates.
+- **Drawing:** `toggleDrawMode()` turns on drawing (`.drawing` on the court). `initArrowDrawing()` handles mouse/touch; a press on a dot or the shuttlecock still drags it instead of drawing, and lines under 15px are discarded as accidental taps.
+- **Formations:** `PRESET_FORMATIONS` are built in (預設 / 進攻・前後站 / 防守・左右站). User-saved ones (positions + arrows) live in `localStorage` under `tacticalFormations`, so they are per-device, not shared. `renderFormationBar()` builds chips with DOM APIs (`textContent`), so user-typed names are never injected as HTML.
 
 ### 📋 通知產生器 — 時段與球員
 
@@ -103,7 +119,7 @@ const players = [...]; // 34 players: { id: "<card no><name><suffix>", label: "<
 - `public_account` — array of club fund ledger records
 - `ban_records` — array of `{ id, playerId, playerLabel, banDate, availDate }`
 
-When adding a new endpoint, also add it to the `endpoints` list in the fallback response at the end of the router in `worker.js`.
+When adding a new endpoint, also add it to the `endpoints` list in the fallback response at the end of the router in `worker.js`. New write endpoints are protected automatically by `checkClubPassword()`; call them from the frontend with `apiWrite()`.
 
 ## Frequency Tier Logic
 
@@ -120,7 +136,8 @@ Share weights are adjustable via range sliders; costs auto-recalculate on any ch
 
 ## Editing Notes
 
-- `index.html` is committed with **CRLF** line endings. Scripts that rewrite the file (e.g. Python) must preserve CRLF, otherwise the whole file shows up as changed in the diff.
+- `index.html` is committed with **CRLF** line endings. Scripts that rewrite the file (e.g. Python, or Git Bash `sed -i`) must preserve CRLF, otherwise the whole file shows up as changed in the diff.
+- `worker.js` can be unit-tested locally with Node: copy it to a `.mjs` file, `import worker from ...`, and call `worker.fetch(new Request(...), env)` with a mock `env` (`CLUB_PASSWORD` + a `Map`-backed `BALL_KV`).
 - No test suite exists. To check the mobile layout, serve the folder (`python -m http.server`) and view it at phone width; headless Edge/Chrome can't shrink the window below ~500px, so wrap the page in a 375px-wide `<iframe>` when taking screenshots.
 
 ## Archive Files
